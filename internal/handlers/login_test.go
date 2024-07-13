@@ -10,7 +10,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/grafchitaru/skill/internal/mocks"
+	"github.com/grafchitaru/skillBuilder/internal/mocks"
 	"github.com/stretchr/testify/assert"
 )
 
