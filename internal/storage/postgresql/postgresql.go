@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
@@ -102,4 +103,240 @@ func (s *Storage) Registration(id string, login string, password string) (string
 	}
 
 	return id, nil
+}
+
+func (s *Storage) CreateCollection(ctx context.Context, userID, name, description string) (string, error) {
+	const op = "storage.postgresql.CreateCollection"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	id := uuid.New()
+
+	now := time.Now()
+
+	_, err := s.pool.Exec(ctx, `
+        INSERT INTO collections(id, user_id, name, description, created_at, updated_at)
+        VALUES($1, $2, $3, $4, $5, $6);
+    `, id, userID, name, description, now.Format("2006-01-02 15:04:05"), now.Format("2006-01-02 15:04:05"))
+	if err != nil {
+		return "", fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return id.String(), nil
+}
+
+func (s *Storage) UpdateCollection(ctx context.Context, collectionID, name, description string) error {
+	const op = "storage.postgresql.UpdateCollection"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	now := time.Now()
+
+	_, err := s.pool.Exec(ctx, `
+        UPDATE collections
+        SET name=$1, description=$2, updated_at=$3
+        WHERE id=$4;
+    `, name, description, now.Format("2006-01-02 15:04:05"), collectionID)
+	if err != nil {
+		return fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) AddMaterialToCollection(ctx context.Context, collectionID, materialID string) error {
+	const op = "storage.postgresql.AddMaterialToCollection"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	_, err := s.pool.Exec(ctx, `
+        INSERT INTO collection_materials(collection_id, material_id)
+        VALUES($1, $2);
+    `, collectionID, materialID)
+	if err != nil {
+		return fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) UpdateMaterial(ctx context.Context, materialID string, name string, description string, materialType string, link string, xp int) error {
+	const op = "storage.postgresql.UpdateMaterial"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	_, err := s.pool.Exec(ctx, `
+        UPDATE materials
+        SET name=$1, description=$2, type=$3, link=$4, xp=$5
+        WHERE id=$6;
+    `, name, description, materialType, link, xp, materialID)
+	if err != nil {
+		return fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) DeleteMaterial(ctx context.Context, materialID string) error {
+	const op = "storage.postgresql.DeleteMaterial"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	_, err := s.pool.Exec(ctx, `
+        DELETE FROM materials
+        WHERE id=$1;
+    `, materialID)
+	if err != nil {
+		return fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) GetCollectionsByService(ctx context.Context, service string) ([]string, error) {
+	const op = "storage.postgresql.GetCollectionsByService"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	var ids []string
+	err := s.pool.QueryRow(ctx, "SELECT id FROM collections WHERE service = $1", service).Scan(&ids)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, fmt.Errorf("%s: operation timed out: %w", op, err)
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return ids, nil
+}
+
+func (s *Storage) GetUserCollections(ctx context.Context, userID string) ([]string, error) {
+	const op = "storage.postgresql.GetUserCollections"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	var ids []string
+	err := s.pool.QueryRow(ctx, "SELECT collection_id FROM user_collections WHERE user_id = $1", userID).Scan(&ids)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, fmt.Errorf("%s: operation timed out: %w", op, err)
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return ids, nil
+}
+
+func (s *Storage) GetCollection(ctx context.Context, collectionID string) (string, string, error) {
+	const op = "storage.postgresql.GetCollection"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	var name, description string
+	err := s.pool.QueryRow(ctx, "SELECT name, description FROM collections WHERE id = $1", collectionID).Scan(&name, &description)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return "", "", fmt.Errorf("%s: operation timed out: %w", op, err)
+		}
+		return "", "", fmt.Errorf("%s: %w", op, err)
+	}
+
+	return name, description, nil
+}
+
+func (s *Storage) GetMaterial(ctx context.Context, materialID string) (string, string, string, string, int, error) {
+	const op = "storage.postgresql.GetMaterial"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	var name, description, materialType, link string
+	var xp int
+	err := s.pool.QueryRow(ctx, "SELECT name, description, type, link, xp FROM materials WHERE id = $1", materialID).Scan(&name, &description, &materialType, &link, &xp)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return "", "", "", "", 0, fmt.Errorf("%s: operation timed out: %w", op, err)
+		}
+		return "", "", "", "", 0, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return name, description, materialType, link, xp, nil
+}
+
+func (s *Storage) AddCollectionToUser(ctx context.Context, userID, collectionID string) error {
+	const op = "storage.postgresql.AddCollectionToUser"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	_, err := s.pool.Exec(ctx, `
+        INSERT INTO user_collections(user_id, collection_id)
+        VALUES($1, $2);
+    `, userID, collectionID)
+	if err != nil {
+		return fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) DeleteCollectionFromUser(ctx context.Context, userID, collectionID string) error {
+	const op = "storage.postgresql.DeleteCollectionFromUser"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	_, err := s.pool.Exec(ctx, `
+        DELETE FROM user_collections
+        WHERE user_id=$1 AND collection_id=$2;
+    `, userID, collectionID)
+	if err != nil {
+		return fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) MarkMaterialAsCompleted(ctx context.Context, userID, materialID string) error {
+	const op = "storage.postgresql.MarkMaterialAsCompleted"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	_, err := s.pool.Exec(ctx, `
+        UPDATE user_materials
+        SET completed=true
+        WHERE user_id=$1 AND material_id=$2;
+    `, userID, materialID)
+	if err != nil {
+		return fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return nil
+}
+
+func (s *Storage) MarkMaterialAsNotCompleted(ctx context.Context, userID, materialID string) error {
+	const op = "storage.postgresql.MarkMaterialAsNotCompleted"
+
+	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
+	_, err := s.pool.Exec(ctx, `
+        UPDATE user_materials
+        SET completed=false
+        WHERE user_id=$1 AND material_id=$2;
+    `, userID, materialID)
+	if err != nil {
+		return fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return nil
 }
