@@ -105,10 +105,10 @@ func (s *Storage) Registration(id string, login string, password string) (string
 	return id, nil
 }
 
-func (s *Storage) CreateCollection(ctx context.Context, userID, name, description string) (string, error) {
+func (s *Storage) CreateCollection(userID, name, description string) (string, error) {
 	const op = "storage.postgresql.CreateCollection"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	id := uuid.New()
@@ -126,10 +126,10 @@ func (s *Storage) CreateCollection(ctx context.Context, userID, name, descriptio
 	return id.String(), nil
 }
 
-func (s *Storage) UpdateCollection(ctx context.Context, collectionID, name, description string) error {
+func (s *Storage) UpdateCollection(collectionID, name, description string) error {
 	const op = "storage.postgresql.UpdateCollection"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	now := time.Now()
@@ -146,10 +146,10 @@ func (s *Storage) UpdateCollection(ctx context.Context, collectionID, name, desc
 	return nil
 }
 
-func (s *Storage) AddMaterialToCollection(ctx context.Context, collectionID, materialID string) error {
+func (s *Storage) AddMaterialToCollection(collectionID, materialID string) error {
 	const op = "storage.postgresql.AddMaterialToCollection"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	_, err := s.pool.Exec(ctx, `
@@ -163,10 +163,10 @@ func (s *Storage) AddMaterialToCollection(ctx context.Context, collectionID, mat
 	return nil
 }
 
-func (s *Storage) UpdateMaterial(ctx context.Context, materialID string, name string, description string, materialType string, link string, xp int) error {
+func (s *Storage) UpdateMaterial(materialID string, name string, description string, materialType string, link string, xp int) error {
 	const op = "storage.postgresql.UpdateMaterial"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	_, err := s.pool.Exec(ctx, `
@@ -181,10 +181,10 @@ func (s *Storage) UpdateMaterial(ctx context.Context, materialID string, name st
 	return nil
 }
 
-func (s *Storage) DeleteMaterial(ctx context.Context, materialID string) error {
+func (s *Storage) DeleteMaterial(materialID string) error {
 	const op = "storage.postgresql.DeleteMaterial"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	_, err := s.pool.Exec(ctx, `
@@ -198,10 +198,10 @@ func (s *Storage) DeleteMaterial(ctx context.Context, materialID string) error {
 	return nil
 }
 
-func (s *Storage) GetCollectionsByService(ctx context.Context, service string) ([]string, error) {
+func (s *Storage) GetCollectionsByService(service string) ([]string, error) {
 	const op = "storage.postgresql.GetCollectionsByService"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	var ids []string
@@ -216,10 +216,10 @@ func (s *Storage) GetCollectionsByService(ctx context.Context, service string) (
 	return ids, nil
 }
 
-func (s *Storage) GetUserCollections(ctx context.Context, userID string) ([]string, error) {
+func (s *Storage) GetUserCollections(userID string) ([]string, error) {
 	const op = "storage.postgresql.GetUserCollections"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	var ids []string
@@ -234,10 +234,10 @@ func (s *Storage) GetUserCollections(ctx context.Context, userID string) ([]stri
 	return ids, nil
 }
 
-func (s *Storage) GetCollection(ctx context.Context, collectionID string) (string, string, error) {
+func (s *Storage) GetCollection(collectionID string) (string, string, error) {
 	const op = "storage.postgresql.GetCollection"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	var name, description string
@@ -252,10 +252,10 @@ func (s *Storage) GetCollection(ctx context.Context, collectionID string) (strin
 	return name, description, nil
 }
 
-func (s *Storage) GetMaterial(ctx context.Context, materialID string) (string, string, string, string, int, error) {
+func (s *Storage) GetMaterial(materialID string) (string, string, string, string, int, error) {
 	const op = "storage.postgresql.GetMaterial"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	var name, description, materialType, link string
@@ -271,10 +271,10 @@ func (s *Storage) GetMaterial(ctx context.Context, materialID string) (string, s
 	return name, description, materialType, link, xp, nil
 }
 
-func (s *Storage) AddCollectionToUser(ctx context.Context, userID, collectionID string) error {
+func (s *Storage) AddCollectionToUser(userID, collectionID string) error {
 	const op = "storage.postgresql.AddCollectionToUser"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	_, err := s.pool.Exec(ctx, `
@@ -288,10 +288,10 @@ func (s *Storage) AddCollectionToUser(ctx context.Context, userID, collectionID 
 	return nil
 }
 
-func (s *Storage) DeleteCollectionFromUser(ctx context.Context, userID, collectionID string) error {
+func (s *Storage) DeleteCollectionFromUser(userID, collectionID string) error {
 	const op = "storage.postgresql.DeleteCollectionFromUser"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	_, err := s.pool.Exec(ctx, `
@@ -305,10 +305,10 @@ func (s *Storage) DeleteCollectionFromUser(ctx context.Context, userID, collecti
 	return nil
 }
 
-func (s *Storage) MarkMaterialAsCompleted(ctx context.Context, userID, materialID string) error {
+func (s *Storage) MarkMaterialAsCompleted(userID, materialID string) error {
 	const op = "storage.postgresql.MarkMaterialAsCompleted"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	_, err := s.pool.Exec(ctx, `
@@ -323,10 +323,10 @@ func (s *Storage) MarkMaterialAsCompleted(ctx context.Context, userID, materialI
 	return nil
 }
 
-func (s *Storage) MarkMaterialAsNotCompleted(ctx context.Context, userID, materialID string) error {
+func (s *Storage) MarkMaterialAsNotCompleted(userID, materialID string) error {
 	const op = "storage.postgresql.MarkMaterialAsNotCompleted"
 
-	ctx, cancel := context.WithTimeout(ctx, time.Second*5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	_, err := s.pool.Exec(ctx, `
