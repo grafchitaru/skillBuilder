@@ -28,6 +28,8 @@ func New(ctx handlers.Handlers) {
 
 	r.Post("/api/user/login", hc.Login)
 
+	r.Post("/api/collection/create", hc.CreateCollection)
+
 	err := http.ListenAndServe(ctx.Config.HTTPServerAddress, r)
 	if err != nil {
 		fmt.Println("Error server: %w", err)
