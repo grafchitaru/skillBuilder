@@ -201,7 +201,7 @@ func (s *Storage) UpdateMaterial(materialID string, name string, description str
 	return nil
 }
 
-func (s *Storage) DeleteMaterial(materialID string) error {
+func (s *Storage) DeleteMaterial(userID, materialID string) error {
 	const op = "storage.postgresql.DeleteMaterial"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -209,8 +209,8 @@ func (s *Storage) DeleteMaterial(materialID string) error {
 
 	_, err := s.pool.Exec(ctx, `
         DELETE FROM materials
-        WHERE id=$1;
-    `, materialID)
+        WHERE id=$1 AND user_id=$2;
+    `, materialID, userID)
 	if err != nil {
 		return fmt.Errorf("%s exec: %w", op, err)
 	}

@@ -12,7 +12,7 @@ type Repositories interface {
 	UpdateCollection(collectionID string, name string, description string) error
 	AddMaterialToCollection(collectionID, materialID string) error
 	UpdateMaterial(materialID string, name string, description string, materialType string, link string, xp int) error
-	DeleteMaterial(materialID string) error
+	DeleteMaterial(userID, materialID string) error
 	GetCollectionsByService(service string) ([]string, error)
 	GetUserCollections(userID string) ([]string, error)
 	GetCollection(collectionID string) (string, string, error)
