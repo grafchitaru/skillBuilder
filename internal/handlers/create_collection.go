@@ -4,14 +4,10 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 	"io"
 	"net/http"
 )
-
-type Collection struct {
-	Name        string `json:"name"`
-	Description string `json:"description"`
-}
 
 func (ctx *Handlers) CreateCollection(res http.ResponseWriter, req *http.Request) {
 	var reader io.Reader
@@ -34,7 +30,7 @@ func (ctx *Handlers) CreateCollection(res http.ResponseWriter, req *http.Request
 		return
 	}
 
-	var collection Collection
+	var collection models.NewCollection
 
 	if err := json.Unmarshal(body, &collection); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
