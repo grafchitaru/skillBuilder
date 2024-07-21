@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"errors"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 )
 
 type GetUserFunc func(login string) (string, error)
@@ -16,7 +17,7 @@ type UpdateMaterialFunc func(materialID string, name string, description string,
 type DeleteMaterialFunc func(userID, materialID string) error
 type GetCollectionsByServiceFunc func(service string) ([]string, error)
 type GetUserCollectionsFunc func(userID string) ([]string, error)
-type GetCollectionFunc func(collectionID string) (string, string, error)
+type GetCollectionFunc func(collectionID string) (models.Collection, error)
 type GetMaterialFunc func(materialID string) (string, string, string, string, int, error)
 type AddCollectionToUserFunc func(userID, collectionID string) error
 type DeleteCollectionFromUserFunc func(userID, collectionID string) error
@@ -165,11 +166,11 @@ func (ms *MockStorage) GetUserCollections(userID string) ([]string, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (ms *MockStorage) GetCollection(collectionID string) (string, string, error) {
+func (ms *MockStorage) GetCollection(collectionID string) (models.Collection, error) {
 	if ms.GetCollectionFunc != nil {
 		return ms.GetCollectionFunc(collectionID)
 	}
-	return "", "", errors.New("not implemented")
+	return models.Collection{}, errors.New("not implemented")
 }
 
 func (ms *MockStorage) GetMaterial(materialID string) (string, string, string, string, int, error) {

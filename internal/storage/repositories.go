@@ -1,5 +1,7 @@
 package storage
 
+import "github.com/grafchitaru/skillBuilder/internal/models"
+
 type Repositories interface {
 	Ping() error
 	Close()
@@ -15,7 +17,7 @@ type Repositories interface {
 	DeleteMaterial(userID, materialID string) error
 	GetCollectionsByService(service string) ([]string, error)
 	GetUserCollections(userID string) ([]string, error)
-	GetCollection(collectionID string) (string, string, error)
+	GetCollection(collectionID string) (models.Collection, error)
 	GetMaterial(materialID string) (string, string, string, string, int, error)
 	AddCollectionToUser(userID, collectionID string) error
 	DeleteCollectionFromUser(userID, collectionID string) error

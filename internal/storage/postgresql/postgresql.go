@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"time"
 )
@@ -254,22 +255,23 @@ func (s *Storage) GetUserCollections(userID string) ([]string, error) {
 	return ids, nil
 }
 
-func (s *Storage) GetCollection(collectionID string) (string, string, error) {
+func (s *Storage) GetCollection(id string, userId string) (models.Collection, error) {
 	const op = "storage.postgresql.GetCollection"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	var name, description string
-	err := s.pool.QueryRow(ctx, "SELECT name, description FROM collections WHERE id = $1", collectionID).Scan(&name, &description)
+	var collection models.Collection
+
+	err := s.pool.QueryRow(ctx, "SELECT * FROM collections WHERE id = $1 AND user_id = $2", id, userId).Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			return "", "", fmt.Errorf("%s: operation timed out: %w", op, err)
+			return models.Collection{}, fmt.Errorf("%s: operation timed out: %w", op, err)
 		}
-		return "", "", fmt.Errorf("%s: %w", op, err)
+		return models.Collection{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return name, description, nil
+	return collection, nil
 }
 
 func (s *Storage) GetMaterial(materialID string) (string, string, string, string, int, error) {
