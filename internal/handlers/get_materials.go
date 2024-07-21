@@ -2,18 +2,25 @@ package handlers
 
 import (
 	"encoding/json"
+	"github.com/go-chi/chi/v5"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
 	"net/http"
 )
 
-func (ctx *Handlers) GetCollections(res http.ResponseWriter, req *http.Request) {
+func (ctx *Handlers) GetMaterials(res http.ResponseWriter, req *http.Request) {
+	collectionID := chi.URLParam(req, "id")
+	if collectionID == "" {
+		http.Error(res, "ID not found", http.StatusNotFound)
+		return
+	}
+
 	_, err := auth.GetUserID(req, ctx.Config.SecretKey)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	result, err := ctx.Repos.GetCollections()
+	result, err := ctx.Repos.GetMaterials(collectionID)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
 		return

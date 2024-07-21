@@ -19,6 +19,7 @@ type Repositories interface {
 	GetUserCollections(userID string) ([]string, error)
 	GetCollection(collectionID string) (models.Collection, error)
 	GetMaterial(materialID string) (models.Material, error)
+	GetMaterials(collectionID string) ([]models.Material, error)
 	AddCollectionToUser(userID, collectionID string) error
 	DeleteCollectionFromUser(userID, collectionID string) error
 	MarkMaterialAsCompleted(userID, materialID string) error

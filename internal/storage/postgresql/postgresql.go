@@ -247,6 +247,37 @@ func (s *Storage) GetCollections() ([]models.Collection, error) {
 	return collections, nil
 }
 
+func (s *Storage) GetMaterials(collectionID string) ([]models.Material, error) {
+	const op = "storage.postgresql.GetMaterials"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	rows, err := s.pool.Query(ctx, "SELECT * "+
+		"FROM materials "+
+		"RIGHT JOIN collection_materials ON materials.id = collection_materials.material_id"+
+		"WHERE collection_materials.collection_id = $1", collectionID)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var materials []models.Material
+	for rows.Next() {
+		var material models.Material
+		if err := rows.Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.Type, &material.Xp, &material.Link); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		materials = append(materials, material)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return materials, nil
+}
+
 func (s *Storage) GetUserCollections(userID string) ([]string, error) {
 	const op = "storage.postgresql.GetUserCollections"
 
