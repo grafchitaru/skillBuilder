@@ -11,7 +11,7 @@ type Repositories interface {
 	CreateCollection(userID string, name string, description string) (string, error)
 	CreateMaterial(userID string, name string, description string, typed string, xp int, link string) (string, error)
 	DeleteCollection(userID, collectionID string) error
-	UpdateCollection(collectionID string, name string, description string) error
+	UpdateCollection(collection models.Collection) error
 	AddMaterialToCollection(collectionID, materialID string) error
 	UpdateMaterial(materialID string, name string, description string, materialType string, link string, xp int) error
 	DeleteMaterial(userID, materialID string) error
