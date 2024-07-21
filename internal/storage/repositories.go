@@ -13,7 +13,7 @@ type Repositories interface {
 	DeleteCollection(userID, collectionID string) error
 	UpdateCollection(collection models.Collection) error
 	AddMaterialToCollection(collectionID, materialID string) error
-	UpdateMaterial(materialID string, name string, description string, materialType string, link string, xp int) error
+	UpdateMaterial(material models.Material) error
 	DeleteMaterial(userID, materialID string) error
 	GetCollections() ([]models.Collection, error)
 	GetUserCollections(userID string) ([]string, error)

@@ -184,17 +184,19 @@ func (s *Storage) AddMaterialToCollection(collectionID, materialID string) error
 	return nil
 }
 
-func (s *Storage) UpdateMaterial(materialID string, name string, description string, materialType string, link string, xp int) error {
+func (s *Storage) UpdateMaterial(material models.Material) error {
 	const op = "storage.postgresql.UpdateMaterial"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
+	now := time.Now()
+
 	_, err := s.pool.Exec(ctx, `
         UPDATE materials
-        SET name=$1, description=$2, type=$3, link=$4, xp=$5
-        WHERE id=$6;
-    `, name, description, materialType, link, xp, materialID)
+        SET name=$1, description=$2, type=$3, link=$4, xp=$5, updated_at=$6
+        WHERE id=$7 AND user_id=$8;
+    `, material.Name, material.Description, material.Type, material.Link, material.Xp, now.Format("2006-01-02 15:04:05"), material.Id, material.UserId)
 	if err != nil {
 		return fmt.Errorf("%s exec: %w", op, err)
 	}
