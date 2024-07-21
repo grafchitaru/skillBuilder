@@ -4,18 +4,10 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 	"io"
 	"net/http"
 )
-
-type Material struct {
-	CollectionID string `json:"collectionID"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	Type         string `json:"type"`
-	Xp           int    `json:"xp"`
-	Link         string `json:"link"`
-}
 
 func (ctx *Handlers) AddMaterial(res http.ResponseWriter, req *http.Request) {
 	var reader io.Reader
@@ -38,7 +30,7 @@ func (ctx *Handlers) AddMaterial(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	var material Material
+	var material models.NewMaterial
 
 	if err := json.Unmarshal(body, &material); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
