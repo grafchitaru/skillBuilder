@@ -8,6 +8,7 @@ type GetUserFunc func(login string) (string, error)
 type GetUserPasswordFunc func(login string) (string, error)
 type RegistrationFunc func(id string, login string, password string) (string, error)
 type CreateCollectionFunc func(userID string, name string, description string) (string, error)
+type CreateMaterialFunc func(userID string, name string, description string, typed string, xp int, link string) (string, error)
 type UpdateCollectionFunc func(collectionID string, name string, description string) error
 type AddMaterialToCollectionFunc func(collectionID, materialID string) error
 type UpdateMaterialFunc func(materialID string, name string, description string, materialType string, link string, xp int) error
@@ -30,6 +31,7 @@ type MockStorage struct {
 	IDs                            map[string]string
 	Passwords                      map[string]string
 	CreateCollectionFunc           CreateCollectionFunc
+	CreateMaterialFunc             CreateMaterialFunc
 	UpdateCollectionFunc           UpdateCollectionFunc
 	AddMaterialToCollectionFunc    AddMaterialToCollectionFunc
 	UpdateMaterialFunc             UpdateMaterialFunc
@@ -101,6 +103,13 @@ func (ms *MockStorage) Registration(id string, login string, password string) (s
 func (ms *MockStorage) CreateCollection(userID string, name string, description string) (string, error) {
 	if ms.CreateCollectionFunc != nil {
 		return ms.CreateCollectionFunc(userID, name, description)
+	}
+	return "", errors.New("not implemented")
+}
+
+func (ms *MockStorage) CreateMaterial(userID string, name string, description string, typed string, xp int, link string) (string, error) {
+	if ms.CreateMaterialFunc != nil {
+		return ms.CreateMaterialFunc(userID, name, description, typed, xp, link)
 	}
 	return "", errors.New("not implemented")
 }

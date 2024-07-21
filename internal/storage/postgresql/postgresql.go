@@ -126,6 +126,26 @@ func (s *Storage) CreateCollection(userID, name, description string) (string, er
 	return id.String(), nil
 }
 
+func (s *Storage) CreateMaterial(userID string, name string, description string, typed string, xp int, link string) (string, error) {
+	const op = "storage.postgresql.CreateMaterial"
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	id := uuid.New()
+
+	now := time.Now()
+
+	_, err := s.pool.Exec(ctx, `
+        INSERT INTO materials(id, user_id, name, description, created_at, updated_at, type, xp, link)
+        VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9);
+    `, id, userID, name, description, now.Format("2006-01-02 15:04:05"), now.Format("2006-01-02 15:04:05"), typed, xp, link)
+	if err != nil {
+		return "", fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return id.String(), nil
+}
+
 func (s *Storage) UpdateCollection(collectionID, name, description string) error {
 	const op = "storage.postgresql.UpdateCollection"
 
