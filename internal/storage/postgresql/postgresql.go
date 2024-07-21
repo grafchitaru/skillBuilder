@@ -219,22 +219,32 @@ func (s *Storage) DeleteMaterial(userID, materialID string) error {
 	return nil
 }
 
-func (s *Storage) GetCollectionsByService(service string) ([]string, error) {
-	const op = "storage.postgresql.GetCollectionsByService"
+func (s *Storage) GetCollections() ([]models.Collection, error) {
+	const op = "storage.postgresql.GetCollections"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	var ids []string
-	err := s.pool.QueryRow(ctx, "SELECT id FROM collections WHERE service = $1", service).Scan(&ids)
+	rows, err := s.pool.Query(ctx, "SELECT * FROM collections")
 	if err != nil {
-		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, fmt.Errorf("%s: operation timed out: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var collections []models.Collection
+	for rows.Next() {
+		var collection models.Collection
+		if err := rows.Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
 		}
+		collections = append(collections, collection)
+	}
+
+	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return ids, nil
+	return collections, nil
 }
 
 func (s *Storage) GetUserCollections(userID string) ([]string, error) {

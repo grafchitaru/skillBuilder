@@ -15,7 +15,7 @@ type Repositories interface {
 	AddMaterialToCollection(collectionID, materialID string) error
 	UpdateMaterial(materialID string, name string, description string, materialType string, link string, xp int) error
 	DeleteMaterial(userID, materialID string) error
-	GetCollectionsByService(service string) ([]string, error)
+	GetCollections() ([]models.Collection, error)
 	GetUserCollections(userID string) ([]string, error)
 	GetCollection(collectionID string) (models.Collection, error)
 	GetMaterial(materialID string) (string, string, string, string, int, error)

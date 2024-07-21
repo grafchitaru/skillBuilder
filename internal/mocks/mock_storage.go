@@ -15,7 +15,7 @@ type UpdateCollectionFunc func(collectionID string, name string, description str
 type AddMaterialToCollectionFunc func(collectionID, materialID string) error
 type UpdateMaterialFunc func(materialID string, name string, description string, materialType string, link string, xp int) error
 type DeleteMaterialFunc func(userID, materialID string) error
-type GetCollectionsByServiceFunc func(service string) ([]string, error)
+type GetCollectionsFunc func(service string) ([]string, error)
 type GetUserCollectionsFunc func(userID string) ([]string, error)
 type GetCollectionFunc func(collectionID string) (models.Collection, error)
 type GetMaterialFunc func(materialID string) (string, string, string, string, int, error)
@@ -39,7 +39,7 @@ type MockStorage struct {
 	AddMaterialToCollectionFunc    AddMaterialToCollectionFunc
 	UpdateMaterialFunc             UpdateMaterialFunc
 	DeleteMaterialFunc             DeleteMaterialFunc
-	GetCollectionsByServiceFunc    GetCollectionsByServiceFunc
+	GetCollectionsFunc             GetCollectionsFunc
 	GetUserCollectionsFunc         GetUserCollectionsFunc
 	GetCollectionFunc              GetCollectionFunc
 	GetMaterialFunc                GetMaterialFunc
@@ -152,9 +152,9 @@ func (ms *MockStorage) DeleteMaterial(userID, materialID string) error {
 	return errors.New("not implemented")
 }
 
-func (ms *MockStorage) GetCollectionsByService(service string) ([]string, error) {
-	if ms.GetCollectionsByServiceFunc != nil {
-		return ms.GetCollectionsByServiceFunc(service)
+func (ms *MockStorage) GetCollections() ([]models.Collection, error) {
+	if ms.GetCollections != nil {
+		return ms.GetCollections()
 	}
 	return nil, errors.New("not implemented")
 }
