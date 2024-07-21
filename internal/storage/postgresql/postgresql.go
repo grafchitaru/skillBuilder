@@ -284,23 +284,23 @@ func (s *Storage) GetCollection(id string, userId string) (models.Collection, er
 	return collection, nil
 }
 
-func (s *Storage) GetMaterial(materialID string) (string, string, string, string, int, error) {
+func (s *Storage) GetMaterial(materialID string) (models.Material, error) {
 	const op = "storage.postgresql.GetMaterial"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	var name, description, materialType, link string
-	var xp int
-	err := s.pool.QueryRow(ctx, "SELECT name, description, type, link, xp FROM materials WHERE id = $1", materialID).Scan(&name, &description, &materialType, &link, &xp)
+	var material models.Material
+
+	err := s.pool.QueryRow(ctx, "SELECT * FROM materials WHERE id = $1", materialID).Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.Name, &material.Description, &material.Type, &material.Link, &material.Xp)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			return "", "", "", "", 0, fmt.Errorf("%s: operation timed out: %w", op, err)
+			return models.Material{}, fmt.Errorf("%s: operation timed out: %w", op, err)
 		}
-		return "", "", "", "", 0, fmt.Errorf("%s: %w", op, err)
+		return models.Material{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return name, description, materialType, link, xp, nil
+	return material, nil
 }
 
 func (s *Storage) AddCollectionToUser(userID, collectionID string) error {

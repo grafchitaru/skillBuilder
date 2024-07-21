@@ -18,7 +18,7 @@ type DeleteMaterialFunc func(userID, materialID string) error
 type GetCollectionsFunc func(service string) ([]string, error)
 type GetUserCollectionsFunc func(userID string) ([]string, error)
 type GetCollectionFunc func(collectionID string) (models.Collection, error)
-type GetMaterialFunc func(materialID string) (string, string, string, string, int, error)
+type GetMaterialFunc func(materialID string) (models.Material, error)
 type AddCollectionToUserFunc func(userID, collectionID string) error
 type DeleteCollectionFromUserFunc func(userID, collectionID string) error
 type MarkMaterialAsCompletedFunc func(userID, materialID string) error
@@ -173,11 +173,11 @@ func (ms *MockStorage) GetCollection(collectionID string) (models.Collection, er
 	return models.Collection{}, errors.New("not implemented")
 }
 
-func (ms *MockStorage) GetMaterial(materialID string) (string, string, string, string, int, error) {
+func (ms *MockStorage) GetMaterial(materialID string) (models.Material, error) {
 	if ms.GetMaterialFunc != nil {
 		return ms.GetMaterialFunc(materialID)
 	}
-	return "", "", "", "", 0, errors.New("not implemented")
+	return models.Material{}, errors.New("not implemented")
 }
 
 func (ms *MockStorage) AddCollectionToUser(userID, collectionID string) error {
