@@ -11,7 +11,7 @@ type RegistrationFunc func(id string, login string, password string) (string, er
 type CreateCollectionFunc func(userID string, name string, description string) (string, error)
 type CreateMaterialFunc func(userID string, name string, description string, typed string, xp int, link string) (string, error)
 type DeleteCollectionFunc func(userID, collectionID string) error
-type UpdateCollectionFunc func(collectionID string, name string, description string) error
+type UpdateCollectionFunc func(collection models.Collection) error
 type AddMaterialToCollectionFunc func(collectionID, materialID string) error
 type UpdateMaterialFunc func(materialID string, name string, description string, materialType string, link string, xp int) error
 type DeleteMaterialFunc func(userID, materialID string) error
@@ -126,9 +126,9 @@ func (ms *MockStorage) DeleteCollection(userID, collectionID string) error {
 	return errors.New("not implemented")
 }
 
-func (ms *MockStorage) UpdateCollection(collectionID string, name string, description string) error {
+func (ms *MockStorage) UpdateCollection(collection models.Collection) error {
 	if ms.UpdateCollectionFunc != nil {
-		return ms.UpdateCollectionFunc(collectionID, name, description)
+		return ms.UpdateCollectionFunc(collection)
 	}
 	return errors.New("not implemented")
 }

@@ -147,7 +147,7 @@ func (s *Storage) CreateMaterial(userID string, name string, description string,
 	return id.String(), nil
 }
 
-func (s *Storage) UpdateCollection(collectionID, name, description string) error {
+func (s *Storage) UpdateCollection(collection models.Collection) error {
 	const op = "storage.postgresql.UpdateCollection"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -158,8 +158,8 @@ func (s *Storage) UpdateCollection(collectionID, name, description string) error
 	_, err := s.pool.Exec(ctx, `
         UPDATE collections
         SET name=$1, description=$2, updated_at=$3
-        WHERE id=$4;
-    `, name, description, now.Format("2006-01-02 15:04:05"), collectionID)
+        WHERE id=$4 AND user_id=$5;
+    `, collection.Name, collection.Description, now.Format("2006-01-02 15:04:05"), collection.Id, collection.UserId)
 	if err != nil {
 		return fmt.Errorf("%s exec: %w", op, err)
 	}
