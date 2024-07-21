@@ -325,6 +325,23 @@ func (s *Storage) DeleteCollectionFromUser(userID, collectionID string) error {
 	return nil
 }
 
+func (s *Storage) DeleteCollection(userID, collectionID string) error {
+	const op = "storage.postgresql.DeleteCollection"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	_, err := s.pool.Exec(ctx, `
+        DELETE FROM collections
+        WHERE user_id=$1 AND id=$2;
+    `, userID, collectionID)
+	if err != nil {
+		return fmt.Errorf("%s exec: %w", op, err)
+	}
+
+	return nil
+}
+
 func (s *Storage) MarkMaterialAsCompleted(userID, materialID string) error {
 	const op = "storage.postgresql.MarkMaterialAsCompleted"
 
