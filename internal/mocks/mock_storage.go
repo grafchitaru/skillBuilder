@@ -19,6 +19,7 @@ type GetCollectionsFunc func(service string) ([]string, error)
 type GetUserCollectionsFunc func(userID string) ([]string, error)
 type GetCollectionFunc func(collectionID string) (models.Collection, error)
 type GetMaterialFunc func(materialID string) (models.Material, error)
+type GetMaterialsFunc func(collectionID string) ([]models.Material, error)
 type AddCollectionToUserFunc func(userID, collectionID string) error
 type DeleteCollectionFromUserFunc func(userID, collectionID string) error
 type MarkMaterialAsCompletedFunc func(userID, materialID string) error
@@ -43,6 +44,7 @@ type MockStorage struct {
 	GetUserCollectionsFunc         GetUserCollectionsFunc
 	GetCollectionFunc              GetCollectionFunc
 	GetMaterialFunc                GetMaterialFunc
+	GetMaterialsFunc               GetMaterialsFunc
 	AddCollectionToUserFunc        AddCollectionToUserFunc
 	DeleteCollectionFromUserFunc   DeleteCollectionFromUserFunc
 	MarkMaterialAsCompletedFunc    MarkMaterialAsCompletedFunc
@@ -178,6 +180,13 @@ func (ms *MockStorage) GetMaterial(materialID string) (models.Material, error) {
 		return ms.GetMaterialFunc(materialID)
 	}
 	return models.Material{}, errors.New("not implemented")
+}
+
+func (ms *MockStorage) GetMaterials(collectionID string) ([]models.Material, error) {
+	if ms.GetMaterialsFunc != nil {
+		return ms.GetMaterialsFunc(collectionID)
+	}
+	return []models.Material{}, errors.New("not implemented")
 }
 
 func (ms *MockStorage) AddCollectionToUser(userID, collectionID string) error {
