@@ -16,7 +16,7 @@ type AddMaterialToCollectionFunc func(collectionID, materialID string) error
 type UpdateMaterialFunc func(material models.Material) error
 type DeleteMaterialFunc func(userID, materialID string) error
 type GetCollectionsFunc func(service string) ([]string, error)
-type GetUserCollectionsFunc func(userID string) ([]string, error)
+type GetUserCollectionsFunc func(userID string) ([]models.Collection, error)
 type GetCollectionFunc func(collectionID string) (models.Collection, error)
 type GetMaterialFunc func(materialID string) (models.Material, error)
 type GetMaterialsFunc func(collectionID string) ([]models.Material, error)
@@ -161,7 +161,7 @@ func (ms *MockStorage) GetCollections() ([]models.Collection, error) {
 	return nil, errors.New("not implemented")
 }
 
-func (ms *MockStorage) GetUserCollections(userID string) ([]string, error) {
+func (ms *MockStorage) GetUserCollections(userID string) ([]models.Collection, error) {
 	if ms.GetUserCollectionsFunc != nil {
 		return ms.GetUserCollectionsFunc(userID)
 	}
