@@ -255,10 +255,10 @@ func (s *Storage) GetMaterials(collectionID string) ([]models.Material, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	rows, err := s.pool.Query(ctx, "SELECT * "+
+	rows, err := s.pool.Query(ctx, "SELECT materials.* "+
 		"FROM materials "+
-		"RIGHT JOIN collection_materials ON materials.id = collection_materials.material_id"+
-		"WHERE collection_materials.collection_id = $1", collectionID)
+		"INNER JOIN collection_materials ON materials.id = collection_materials.material_id "+
+		"WHERE collection_materials.collection_id = $1 ", collectionID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -273,32 +273,48 @@ func (s *Storage) GetMaterials(collectionID string) ([]models.Material, error) {
 		materials = append(materials, material)
 	}
 
-	if err := rows.Err(); err != nil {
+	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	return materials, nil
 }
 
-func (s *Storage) GetUserCollections(userID string) ([]string, error) {
+func (s *Storage) GetUserCollections(userID string) ([]models.Collection, error) {
 	const op = "storage.postgresql.GetUserCollections"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	var ids []string
-	err := s.pool.QueryRow(ctx, "SELECT collection_id FROM user_collections WHERE user_id = $1", userID).Scan(&ids)
+	rows, err := s.pool.Query(ctx, "SELECT collections.* "+
+		"FROM collections "+
+		"INNER JOIN user_collections ON user_collections.collection_id = collections.id "+
+		"AND user_collections.user_id = $1", userID)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return nil, fmt.Errorf("%s: operation timed out: %w", op, err)
 		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+	defer rows.Close()
 
-	return ids, nil
+	var collections []models.Collection
+	for rows.Next() {
+		var collection models.Collection
+		if err = rows.Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		collections = append(collections, collection)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return collections, nil
 }
 
-func (s *Storage) GetCollection(id string, userId string) (models.Collection, error) {
+func (s *Storage) GetCollection(id string) (models.Collection, error) {
 	const op = "storage.postgresql.GetCollection"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
@@ -306,7 +322,7 @@ func (s *Storage) GetCollection(id string, userId string) (models.Collection, er
 
 	var collection models.Collection
 
-	err := s.pool.QueryRow(ctx, "SELECT * FROM collections WHERE id = $1 AND user_id = $2", id, userId).Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description)
+	err := s.pool.QueryRow(ctx, "SELECT * FROM collections WHERE id = $1", id).Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return models.Collection{}, fmt.Errorf("%s: operation timed out: %w", op, err)
@@ -325,7 +341,7 @@ func (s *Storage) GetMaterial(materialID string) (models.Material, error) {
 
 	var material models.Material
 
-	err := s.pool.QueryRow(ctx, "SELECT * FROM materials WHERE id = $1", materialID).Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.Name, &material.Description, &material.Type, &material.Link, &material.Xp)
+	err := s.pool.QueryRow(ctx, "SELECT * FROM materials WHERE id = $1", materialID).Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.Type, &material.Xp, &material.Link)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return models.Material{}, fmt.Errorf("%s: operation timed out: %w", op, err)
@@ -344,7 +360,8 @@ func (s *Storage) AddCollectionToUser(userID, collectionID string) error {
 
 	_, err := s.pool.Exec(ctx, `
         INSERT INTO user_collections(user_id, collection_id)
-        VALUES($1, $2);
+        VALUES($1, $2)
+        ON CONFLICT DO NOTHING;
     `, userID, collectionID)
 	if err != nil {
 		return fmt.Errorf("%s exec: %w", op, err)
@@ -394,9 +411,15 @@ func (s *Storage) MarkMaterialAsCompleted(userID, materialID string) error {
 	defer cancel()
 
 	_, err := s.pool.Exec(ctx, `
-        UPDATE user_materials
-        SET completed=true
-        WHERE user_id=$1 AND material_id=$2;
+        WITH upsert AS (
+    UPDATE user_materials
+    SET completed = true
+    WHERE user_id = $1 AND material_id = $2
+    RETURNING *
+	)
+	INSERT INTO user_materials (user_id, material_id, completed)
+	SELECT $1, $2, true
+	WHERE NOT EXISTS (SELECT * FROM upsert);
     `, userID, materialID)
 	if err != nil {
 		return fmt.Errorf("%s exec: %w", op, err)
@@ -412,9 +435,15 @@ func (s *Storage) MarkMaterialAsNotCompleted(userID, materialID string) error {
 	defer cancel()
 
 	_, err := s.pool.Exec(ctx, `
-        UPDATE user_materials
-        SET completed=false
-        WHERE user_id=$1 AND material_id=$2;
+WITH upsert AS (
+    UPDATE user_materials
+    SET completed = false
+    WHERE user_id = $1 AND material_id = $2
+    RETURNING *
+)
+INSERT INTO user_materials (user_id, material_id, completed)
+SELECT $1, $2, false
+WHERE NOT EXISTS (SELECT * FROM upsert);
     `, userID, materialID)
 	if err != nil {
 		return fmt.Errorf("%s exec: %w", op, err)

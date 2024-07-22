@@ -49,6 +49,12 @@ func (ctx *Handlers) CreateCollection(res http.ResponseWriter, req *http.Request
 		return
 	}
 
+	err = ctx.Repos.AddCollectionToUser(userID, id)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	result := Result{
 		Id: id,
 	}
