@@ -155,7 +155,7 @@ func (ms *MockStorage) DeleteMaterial(userID, materialID string) error {
 }
 
 func (ms *MockStorage) GetCollections() ([]models.Collection, error) {
-	if ms.GetCollections != nil {
+	if ms.GetCollectionsFunc != nil {
 		return ms.GetCollections()
 	}
 	return nil, errors.New("not implemented")

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"net/http"
@@ -31,7 +32,7 @@ func TestCreateCollection(t *testing.T) {
 		return testUserID, nil
 	}
 
-	body, _ := json.Marshal(Collection{Name: "Test Collection", Description: "Test Description"})
+	body, _ := json.Marshal(models.Collection{Name: "Test Collection", Description: "Test Description"})
 	req, err := http.NewRequest("POST", "/api/collection/create", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	require.NoError(t, err)
@@ -63,7 +64,7 @@ func TestCreateCollection_CreateError(t *testing.T) {
 		return testUserID, nil
 	}
 
-	body, _ := json.Marshal(Collection{Name: "Test Collection", Description: "Test Description"})
+	body, _ := json.Marshal(models.Collection{Name: "Test Collection", Description: "Test Description"})
 	req, err := http.NewRequest("POST", "/api/collection/create", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 	require.NoError(t, err)

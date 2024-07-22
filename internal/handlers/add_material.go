@@ -43,6 +43,16 @@ func (ctx *Handlers) AddMaterial(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	collection, err := ctx.Repos.GetCollection(material.CollectionID)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if collection.UserId != userID {
+		http.Error(res, "Forbidden", http.StatusForbidden)
+		return
+	}
+
 	id, err := ctx.Repos.CreateMaterial(userID, material.Name, material.Description, material.Type, material.Xp, material.Link)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
