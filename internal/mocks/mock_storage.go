@@ -24,6 +24,8 @@ type AddCollectionToUserFunc func(userID, collectionID string) error
 type DeleteCollectionFromUserFunc func(userID, collectionID string) error
 type MarkMaterialAsCompletedFunc func(userID, materialID string) error
 type MarkMaterialAsNotCompletedFunc func(userID, materialID string) error
+type SearchMaterialsFunc func(query string) ([]models.Material, error)
+type SearchCollectionsFunc func(query string) ([]models.Collection, error)
 
 type MockStorage struct {
 	PingError                      error
@@ -49,6 +51,8 @@ type MockStorage struct {
 	DeleteCollectionFromUserFunc   DeleteCollectionFromUserFunc
 	MarkMaterialAsCompletedFunc    MarkMaterialAsCompletedFunc
 	MarkMaterialAsNotCompletedFunc MarkMaterialAsNotCompletedFunc
+	SearchMaterialsFunc            SearchMaterialsFunc
+	SearchCollectionsFunc          SearchCollectionsFunc
 }
 
 func NewMockStorage() *MockStorage {
@@ -215,4 +219,18 @@ func (ms *MockStorage) MarkMaterialAsNotCompleted(userID, materialID string) err
 		return ms.MarkMaterialAsNotCompletedFunc(userID, materialID)
 	}
 	return errors.New("not implemented")
+}
+
+func (ms *MockStorage) SearchMaterials(query string) ([]models.Material, error) {
+	if ms.SearchMaterialsFunc != nil {
+		return ms.SearchMaterialsFunc(query)
+	}
+	return []models.Material{}, errors.New("not implemented")
+}
+
+func (ms *MockStorage) SearchCollections(query string) ([]models.Collection, error) {
+	if ms.SearchCollectionsFunc != nil {
+		return ms.SearchCollectionsFunc(query)
+	}
+	return []models.Collection{}, errors.New("not implemented")
 }
