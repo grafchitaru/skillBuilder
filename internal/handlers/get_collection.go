@@ -26,6 +26,8 @@ func (ctx *Handlers) GetCollection(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	//TODO Attach xp + xp success
+
 	data, err := json.Marshal(result)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)

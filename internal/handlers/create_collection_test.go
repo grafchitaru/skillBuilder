@@ -47,6 +47,7 @@ func TestCreateCollection(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
+	//TODO Fix assert
 	assert.Equal(t, rr.Code, http.StatusOK)
 }
 

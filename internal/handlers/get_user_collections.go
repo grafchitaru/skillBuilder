@@ -13,12 +13,20 @@ func (ctx *Handlers) GetUserCollections(res http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	collections, err := ctx.Repos.GetUserCollections(userID)
+	result, err := ctx.Repos.GetUserCollections(userID)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	//TODO Attach xp + xp success
+
+	data, err := json.Marshal(result)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	res.WriteHeader(http.StatusOK)
-	json.NewEncoder(res).Encode(collections)
+	json.NewEncoder(res).Encode(data)
 }

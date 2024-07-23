@@ -46,6 +46,8 @@ func New(ctx handlers.Handlers) {
 	r.Post("/api/material/{id}/completed", hc.MarkMaterialAsCompleted)
 	r.Post("/api/material/{id}/incomplete", hc.MarkMaterialAsIncomplete)
 
+	r.Post("/api/search", hc.SearchCollectionMaterial)
+
 	err := http.ListenAndServe(ctx.Config.HTTPServerAddress, r)
 	if err != nil {
 		fmt.Println("Error server: %w", err)
