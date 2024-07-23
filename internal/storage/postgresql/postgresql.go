@@ -451,3 +451,64 @@ WHERE NOT EXISTS (SELECT * FROM upsert);
 
 	return nil
 }
+
+func (s *Storage) SearchMaterials(query string) ([]models.Material, error) {
+	const op = "storage.postgresql.SearchMaterials"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	rows, err := s.pool.Query(ctx, "SELECT * FROM materials WHERE name LIKE '%'||$1||'%' OR description LIKE '%'||$1||'%'", query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var materials []models.Material
+	for rows.Next() {
+		var material models.Material
+		if err := rows.Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.Type, &material.Xp, &material.Link); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		materials = append(materials, material)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return materials, nil
+}
+
+func (s *Storage) SearchCollections(query string) ([]models.Collection, error) {
+	const op = "storage.postgresql.SearchCollections"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	rows, err := s.pool.Query(ctx, "SELECT * "+
+		"FROM collections "+
+		" WHERE name LIKE '%'||$1||'%' OR description LIKE '%'||$1||'%'", query)
+	if err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			return nil, fmt.Errorf("%s: operation timed out: %w", op, err)
+		}
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var collections []models.Collection
+	for rows.Next() {
+		var collection models.Collection
+		if err = rows.Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		collections = append(collections, collection)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return collections, nil
+}

@@ -24,4 +24,6 @@ type Repositories interface {
 	DeleteCollectionFromUser(userID, collectionID string) error
 	MarkMaterialAsCompleted(userID, materialID string) error
 	MarkMaterialAsNotCompleted(userID, materialID string) error
+	SearchMaterials(query string) ([]models.Material, error)
+	SearchCollections(query string) ([]models.Collection, error)
 }
