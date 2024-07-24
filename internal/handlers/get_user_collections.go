@@ -19,8 +19,6 @@ func (ctx *Handlers) GetUserCollections(res http.ResponseWriter, req *http.Reque
 		return
 	}
 
-	//TODO Attach xp + xp success
-
 	data, err := json.Marshal(result)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -28,5 +26,6 @@ func (ctx *Handlers) GetUserCollections(res http.ResponseWriter, req *http.Reque
 	}
 
 	res.WriteHeader(http.StatusOK)
-	json.NewEncoder(res).Encode(data)
+	res.Header().Set("Content-Type", "application/json")
+	res.Write(data)
 }

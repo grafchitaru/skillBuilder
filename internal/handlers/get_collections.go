@@ -7,19 +7,17 @@ import (
 )
 
 func (ctx *Handlers) GetCollections(res http.ResponseWriter, req *http.Request) {
-	_, err := auth.GetUserID(req, ctx.Config.SecretKey)
+	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	result, err := ctx.Repos.GetCollections()
+	result, err := ctx.Repos.GetCollections(userID)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
 		return
 	}
-
-	//TODO Attach xp + xp success
 
 	data, err := json.Marshal(result)
 	if err != nil {

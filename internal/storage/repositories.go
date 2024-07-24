@@ -15,9 +15,9 @@ type Repositories interface {
 	AddMaterialToCollection(collectionID, materialID string) error
 	UpdateMaterial(material models.Material) error
 	DeleteMaterial(userID, materialID string) error
-	GetCollections() ([]models.Collection, error)
+	GetCollections(userID string) ([]models.Collection, error)
 	GetUserCollections(userID string) ([]models.Collection, error)
-	GetCollection(collectionID string) (models.Collection, error)
+	GetCollection(collectionID string, userID string) (models.Collection, error)
 	GetMaterial(materialID string) (models.Material, error)
 	GetMaterials(collectionID string) ([]models.Material, error)
 	AddCollectionToUser(userID, collectionID string) error
@@ -25,5 +25,5 @@ type Repositories interface {
 	MarkMaterialAsCompleted(userID, materialID string) error
 	MarkMaterialAsNotCompleted(userID, materialID string) error
 	SearchMaterials(query string) ([]models.Material, error)
-	SearchCollections(query string) ([]models.Collection, error)
+	SearchCollections(query string, userID string) ([]models.Collection, error)
 }
