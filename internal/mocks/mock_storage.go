@@ -15,9 +15,9 @@ type UpdateCollectionFunc func(collection models.Collection) error
 type AddMaterialToCollectionFunc func(collectionID, materialID string) error
 type UpdateMaterialFunc func(material models.Material) error
 type DeleteMaterialFunc func(userID, materialID string) error
-type GetCollectionsFunc func(service string) ([]string, error)
+type GetCollectionsFunc func(userID string) ([]string, error)
 type GetUserCollectionsFunc func(userID string) ([]models.Collection, error)
-type GetCollectionFunc func(collectionID string) (models.Collection, error)
+type GetCollectionFunc func(collectionID string, userID string) (models.Collection, error)
 type GetMaterialFunc func(materialID string) (models.Material, error)
 type GetMaterialsFunc func(collectionID string) ([]models.Material, error)
 type AddCollectionToUserFunc func(userID, collectionID string) error
@@ -25,7 +25,7 @@ type DeleteCollectionFromUserFunc func(userID, collectionID string) error
 type MarkMaterialAsCompletedFunc func(userID, materialID string) error
 type MarkMaterialAsNotCompletedFunc func(userID, materialID string) error
 type SearchMaterialsFunc func(query string) ([]models.Material, error)
-type SearchCollectionsFunc func(query string) ([]models.Collection, error)
+type SearchCollectionsFunc func(query string, userID string) ([]models.Collection, error)
 
 type MockStorage struct {
 	PingError                      error
@@ -158,9 +158,9 @@ func (ms *MockStorage) DeleteMaterial(userID, materialID string) error {
 	return errors.New("not implemented")
 }
 
-func (ms *MockStorage) GetCollections() ([]models.Collection, error) {
+func (ms *MockStorage) GetCollections(userID string) ([]models.Collection, error) {
 	if ms.GetCollectionsFunc != nil {
-		return ms.GetCollections()
+		return ms.GetCollections(userID)
 	}
 	return nil, errors.New("not implemented")
 }
@@ -172,9 +172,9 @@ func (ms *MockStorage) GetUserCollections(userID string) ([]models.Collection, e
 	return nil, errors.New("not implemented")
 }
 
-func (ms *MockStorage) GetCollection(collectionID string) (models.Collection, error) {
+func (ms *MockStorage) GetCollection(collectionID string, userID string) (models.Collection, error) {
 	if ms.GetCollectionFunc != nil {
-		return ms.GetCollectionFunc(collectionID)
+		return ms.GetCollectionFunc(collectionID, userID)
 	}
 	return models.Collection{}, errors.New("not implemented")
 }
@@ -228,9 +228,9 @@ func (ms *MockStorage) SearchMaterials(query string) ([]models.Material, error) 
 	return []models.Material{}, errors.New("not implemented")
 }
 
-func (ms *MockStorage) SearchCollections(query string) ([]models.Collection, error) {
+func (ms *MockStorage) SearchCollections(query string, userID string) ([]models.Collection, error) {
 	if ms.SearchCollectionsFunc != nil {
-		return ms.SearchCollectionsFunc(query)
+		return ms.SearchCollectionsFunc(query, userID)
 	}
 	return []models.Collection{}, errors.New("not implemented")
 }

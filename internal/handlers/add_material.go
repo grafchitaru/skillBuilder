@@ -43,7 +43,7 @@ func (ctx *Handlers) AddMaterial(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	collection, err := ctx.Repos.GetCollection(material.CollectionID)
+	collection, err := ctx.Repos.GetCollection(material.CollectionID, userID)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return

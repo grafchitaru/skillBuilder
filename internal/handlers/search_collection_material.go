@@ -46,13 +46,13 @@ func (ctx *Handlers) SearchCollectionMaterial(res http.ResponseWriter, req *http
 		return
 	}
 
-	_, err := auth.GetUserID(req, ctx.Config.SecretKey)
+	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	resultCollections, err := ctx.Repos.SearchCollections(query.Query)
+	resultCollections, err := ctx.Repos.SearchCollections(query.Query, userID)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
 		return
