@@ -20,43 +20,13 @@ type result struct {
 
 func TestCreateCollection(t *testing.T) {
 	cfg := mocks.NewConfig()
-	testUserID := "556501c0-a97d-47ed-9add-73b4a4116c83"
+	testUserID := "af02d036-b457-43a1-8fc9-5c640c3f7d2a"
 	mockStorage := &mocks.MockStorage{
 		CreateCollectionFunc: func(userID string, name string, description string) (string, error) {
 			return "test_collection_id", nil
 		},
-	}
-
-	mockAuthService := mocks.NewMockAuthService()
-	mockAuthService.GetUserIDFunc = func(req *http.Request, secretKey string) (string, error) {
-		return testUserID, nil
-	}
-
-	body, _ := json.Marshal(models.Collection{Name: "Test Collection", Description: "Test Description"})
-	req, err := http.NewRequest("POST", "/api/collection/create", bytes.NewBuffer(body))
-	req.Header.Set("Content-Type", "application/json")
-	require.NoError(t, err)
-	r := httptest.NewRecorder()
-
-	hc := &Handlers{
-		Config: *cfg,
-		Repos:  mockStorage,
-		Auth:   mockAuthService,
-	}
-	hc.CreateCollection(r, req)
-
-	rr := httptest.NewRecorder()
-
-	//TODO Fix assert
-	assert.Equal(t, rr.Code, http.StatusOK)
-}
-
-func TestCreateCollection_CreateError(t *testing.T) {
-	cfg := mocks.NewConfig()
-	testUserID := "556501c0-a97d-47ed-9add-73b4a4116c83"
-	mockStorage := &mocks.MockStorage{
-		CreateCollectionFunc: func(userID string, name string, description string) (string, error) {
-			return "", errors.New("create collection error")
+		AddCollectionToUserFunc: func(userID string, name string) error {
+			return nil
 		},
 	}
 
@@ -68,6 +38,12 @@ func TestCreateCollection_CreateError(t *testing.T) {
 	body, _ := json.Marshal(models.Collection{Name: "Test Collection", Description: "Test Description"})
 	req, err := http.NewRequest("POST", "/api/collection/create", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
+	// Add the authentication cookie
+	req.AddCookie(&http.Cookie{
+		Name:  "token",
+		Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWYwMmQwMzYtYjQ1Ny00M2ExLThmYzktNWM2NDBjM2Y3ZDJhIn0.F2NM790xbzXL6b-gpxg3xUp1G76ZHS43Gy0dZwGlmJg",
+		Path:  "/",
+	})
 	require.NoError(t, err)
 	r := httptest.NewRecorder()
 
@@ -78,5 +54,44 @@ func TestCreateCollection_CreateError(t *testing.T) {
 	}
 	hc.CreateCollection(r, req)
 
-	assert.Equal(t, http.StatusUnauthorized, r.Code)
+	assert.Equal(t, http.StatusCreated, r.Code)
+}
+
+func TestCreateCollection_CreateError(t *testing.T) {
+	cfg := mocks.NewConfig()
+	testUserID := "af02d036-b457-43a1-8fc9-5c640c3f7d2a"
+	mockStorage := &mocks.MockStorage{
+		CreateCollectionFunc: func(userID string, name string, description string) (string, error) {
+			return "", errors.New("create collection error")
+		},
+		AddCollectionToUserFunc: func(userID string, name string) error {
+			return nil
+		},
+	}
+
+	mockAuthService := mocks.NewMockAuthService()
+	mockAuthService.GetUserIDFunc = func(req *http.Request, secretKey string) (string, error) {
+		return testUserID, nil
+	}
+
+	body, _ := json.Marshal(models.Collection{Name: "Test Collection", Description: "Test Description"})
+	req, err := http.NewRequest("POST", "/api/collection/create", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	// Add the authentication cookie
+	req.AddCookie(&http.Cookie{
+		Name:  "token",
+		Value: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWYwMmQwMzYtYjQ1Ny00M2ExLThmYzktNWM2NDBjM2Y3ZDJhIn0.F2NM790xbzXL6b-gpxg3xUp1G76ZHS43Gy0dZwGlmJg",
+		Path:  "/",
+	})
+	require.NoError(t, err)
+	r := httptest.NewRecorder()
+
+	hc := &Handlers{
+		Config: *cfg,
+		Repos:  mockStorage,
+		Auth:   mockAuthService,
+	}
+	hc.CreateCollection(r, req)
+
+	assert.Equal(t, http.StatusInternalServerError, r.Code)
 }

@@ -65,6 +65,6 @@ func (ctx *Handlers) CreateCollection(res http.ResponseWriter, req *http.Request
 	}
 
 	res.Header().Set("Content-Type", "application/json")
-	res.WriteHeader(http.StatusOK)
+	res.WriteHeader(http.StatusCreated)
 	res.Write(data)
 }
