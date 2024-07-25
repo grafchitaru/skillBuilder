@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS "materials"
     user_id uuid NOT NULL REFERENCES users(id),
     name text NOT NULL,
     description text,
-    type text NOT NULL,
+    type_id uuid NOT NULL NOT NULL REFERENCES type_materials(id),
     xp integer NOT NULL,
     link text
     );

@@ -26,4 +26,5 @@ type Repositories interface {
 	MarkMaterialAsNotCompleted(userID, materialID string) error
 	SearchMaterials(query string) ([]models.Material, error)
 	SearchCollections(query string, userID string) ([]models.Collection, error)
+	GetTypeMaterials() ([]models.TypeMaterial, error)
 }

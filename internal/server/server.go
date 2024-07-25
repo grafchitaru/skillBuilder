@@ -48,6 +48,8 @@ func New(ctx handlers.Handlers) {
 
 	r.Post("/api/search", hc.SearchCollectionMaterial)
 
+	r.Get("/api/material/type", hc.GetTypeMaterials)
+
 	err := http.ListenAndServe(ctx.Config.HTTPServerAddress, r)
 	if err != nil {
 		fmt.Println("Error server: %w", err)

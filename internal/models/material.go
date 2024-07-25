@@ -6,7 +6,7 @@ type NewMaterial struct {
 	CollectionID string `json:"collectionID"`
 	Name         string `json:"name"`
 	Description  string `json:"description"`
-	Type         string `json:"type"`
+	TypeId       string `json:"type_id"`
 	Xp           int    `json:"xp"`
 	Link         string `json:"link"`
 }
@@ -18,7 +18,7 @@ type Material struct {
 	UserId      string    `json:"user_id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	Type        string    `json:"type"`
+	TypeId      string    `json:"type_id"`
 	Xp          int       `json:"xp"`
 	Link        string    `json:"link"`
 }

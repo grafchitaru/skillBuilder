@@ -26,6 +26,7 @@ type MarkMaterialAsCompletedFunc func(userID, materialID string) error
 type MarkMaterialAsNotCompletedFunc func(userID, materialID string) error
 type SearchMaterialsFunc func(query string) ([]models.Material, error)
 type SearchCollectionsFunc func(query string, userID string) ([]models.Collection, error)
+type GetTypeMaterialsFunc func() ([]models.TypeMaterial, error)
 
 type MockStorage struct {
 	PingError                      error
@@ -53,6 +54,7 @@ type MockStorage struct {
 	MarkMaterialAsNotCompletedFunc MarkMaterialAsNotCompletedFunc
 	SearchMaterialsFunc            SearchMaterialsFunc
 	SearchCollectionsFunc          SearchCollectionsFunc
+	GetTypeMaterialsFunc           GetTypeMaterialsFunc
 }
 
 func NewMockStorage() *MockStorage {
@@ -233,4 +235,11 @@ func (ms *MockStorage) SearchCollections(query string, userID string) ([]models.
 		return ms.SearchCollectionsFunc(query, userID)
 	}
 	return []models.Collection{}, errors.New("not implemented")
+}
+
+func (ms *MockStorage) GetTypeMaterials() ([]models.TypeMaterial, error) {
+	if ms.GetTypeMaterialsFunc != nil {
+		return ms.GetTypeMaterialsFunc()
+	}
+	return []models.TypeMaterial{}, errors.New("not implemented")
 }
