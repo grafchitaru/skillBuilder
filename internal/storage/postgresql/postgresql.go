@@ -127,7 +127,7 @@ func (s *Storage) CreateCollection(userID, name, description string) (string, er
 	return id.String(), nil
 }
 
-func (s *Storage) CreateMaterial(userID string, name string, description string, typed string, xp int, link string) (string, error) {
+func (s *Storage) CreateMaterial(userID string, name string, description string, typeId string, xp int, link string) (string, error) {
 	const op = "storage.postgresql.CreateMaterial"
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
@@ -137,9 +137,9 @@ func (s *Storage) CreateMaterial(userID string, name string, description string,
 	now := time.Now()
 
 	_, err := s.pool.Exec(ctx, `
-        INSERT INTO materials(id, user_id, name, description, created_at, updated_at, type, xp, link)
+        INSERT INTO materials(id, user_id, name, description, created_at, updated_at, type_id, xp, link)
         VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9);
-    `, id, userID, name, description, now.Format("2006-01-02 15:04:05"), now.Format("2006-01-02 15:04:05"), typed, xp, link)
+    `, id, userID, name, description, now.Format("2006-01-02 15:04:05"), now.Format("2006-01-02 15:04:05"), typeId, xp, link)
 	if err != nil {
 		return "", fmt.Errorf("%s exec: %w", op, err)
 	}
@@ -194,9 +194,9 @@ func (s *Storage) UpdateMaterial(material models.Material) error {
 
 	_, err := s.pool.Exec(ctx, `
         UPDATE materials
-        SET name=$1, description=$2, type=$3, link=$4, xp=$5, updated_at=$6
+        SET name=$1, description=$2, type_id=$3, link=$4, xp=$5, updated_at=$6
         WHERE id=$7 AND user_id=$8;
-    `, material.Name, material.Description, material.Type, material.Link, material.Xp, now.Format("2006-01-02 15:04:05"), material.Id, material.UserId)
+    `, material.Name, material.Description, material.TypeId, material.Link, material.Xp, now.Format("2006-01-02 15:04:05"), material.Id, material.UserId)
 	if err != nil {
 		return fmt.Errorf("%s exec: %w", op, err)
 	}
@@ -278,7 +278,7 @@ func (s *Storage) GetMaterials(collectionID string) ([]models.Material, error) {
 	var materials []models.Material
 	for rows.Next() {
 		var material models.Material
-		if err := rows.Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.Type, &material.Xp, &material.Link); err != nil {
+		if err := rows.Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.TypeId, &material.Xp, &material.Link); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		materials = append(materials, material)
@@ -372,7 +372,7 @@ func (s *Storage) GetMaterial(materialID string) (models.Material, error) {
 
 	var material models.Material
 
-	err := s.pool.QueryRow(ctx, "SELECT * FROM materials WHERE id = $1", materialID).Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.Type, &material.Xp, &material.Link)
+	err := s.pool.QueryRow(ctx, "SELECT * FROM materials WHERE id = $1", materialID).Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.TypeId, &material.Xp, &material.Link)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return models.Material{}, fmt.Errorf("%s: operation timed out: %w", op, err)
@@ -498,7 +498,7 @@ func (s *Storage) SearchMaterials(query string) ([]models.Material, error) {
 	var materials []models.Material
 	for rows.Next() {
 		var material models.Material
-		if err := rows.Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.Type, &material.Xp, &material.Link); err != nil {
+		if err := rows.Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.TypeId, &material.Xp, &material.Link); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		materials = append(materials, material)
@@ -552,4 +552,32 @@ func (s *Storage) SearchCollections(query string, userID string) ([]models.Colle
 	}
 
 	return collections, nil
+}
+
+func (s *Storage) GetTypeMaterials() ([]models.TypeMaterial, error) {
+	const op = "storage.postgresql.GetTypeMaterials"
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	rows, err := s.pool.Query(ctx, "SELECT * FROM type_materials")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer rows.Close()
+
+	var typeMaterials []models.TypeMaterial
+	for rows.Next() {
+		var typeMaterial models.TypeMaterial
+		if err = rows.Scan(&typeMaterial.Id, &typeMaterial.CreatedAt, &typeMaterial.UpdatedAt, &typeMaterial.Name, &typeMaterial.Characteristic, &typeMaterial.Xp); err != nil {
+			return nil, fmt.Errorf("%s: %w", op, err)
+		}
+		typeMaterials = append(typeMaterials, typeMaterial)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return typeMaterials, nil
 }

@@ -53,7 +53,7 @@ func (ctx *Handlers) AddMaterial(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	id, err := ctx.Repos.CreateMaterial(userID, material.Name, material.Description, material.Type, material.Xp, material.Link)
+	id, err := ctx.Repos.CreateMaterial(userID, material.Name, material.Description, material.TypeId, material.Xp, material.Link)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
