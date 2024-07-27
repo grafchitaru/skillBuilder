@@ -58,15 +58,6 @@ func (ctx *Handlers) Login(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	result := Result{
-		Id: userID,
-	}
-	data, err := json.Marshal(result)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
 	userIDuuid, err := uuid.Parse(userID)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
@@ -75,6 +66,16 @@ func (ctx *Handlers) Login(res http.ResponseWriter, req *http.Request) {
 
 	token, _ := auth.GenerateToken(userIDuuid, ctx.Config.SecretKey)
 	auth.SetCookieAuthorization(res, req, token)
+
+	result := Result{
+		Id:    userID,
+		Token: token,
+	}
+	data, err := json.Marshal(result)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	res.WriteHeader(http.StatusOK)
 	res.Write(data)

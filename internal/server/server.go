@@ -7,6 +7,7 @@ import (
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/compress"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/logger"
+	"github.com/rs/cors"
 	"net/http"
 )
 
@@ -18,6 +19,14 @@ func New(ctx handlers.Handlers) {
 
 	r := chi.NewRouter()
 
+	corsMiddleware := cors.New(cors.Options{
+		AllowedOrigins:   []string{ctx.Config.ClientServer},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"*"},
+		AllowCredentials: true,
+	})
+
+	r.Use(corsMiddleware.Handler)
 	r.Use(logger.WithLogging)
 	r.Use(compress.WithCompressionResponse)
 	r.Use(auth.WithUserCookie(hc.Config.SecretKey))

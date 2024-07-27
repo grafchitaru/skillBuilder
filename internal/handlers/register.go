@@ -17,7 +17,8 @@ type Reg struct {
 }
 
 type Result struct {
-	Id string `json:"id"`
+	Id    string `json:"id"`
+	Token string `json:"token"`
 }
 
 func (ctx *Handlers) Register(res http.ResponseWriter, req *http.Request) {
@@ -72,17 +73,18 @@ func (ctx *Handlers) Register(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	token, _ := auth.GenerateToken(userID, ctx.Config.SecretKey)
+	auth.SetCookieAuthorization(res, req, token)
+
 	result := Result{
-		Id: newUser,
+		Id:    newUser,
+		Token: token,
 	}
 	data, err := json.Marshal(result)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	token, _ := auth.GenerateToken(userID, ctx.Config.SecretKey)
-	auth.SetCookieAuthorization(res, req, token)
 
 	res.WriteHeader(http.StatusOK)
 	res.Write(data)

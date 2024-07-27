@@ -56,9 +56,11 @@ func WithUserCookie(secretKey string) func(next http.Handler) http.Handler {
 func SetCookieAuthorization(w http.ResponseWriter, r *http.Request, token string) {
 	//nolint:exhaustruct
 	cook := &http.Cookie{
-		Name:  "token",
-		Value: token,
-		Path:  "/",
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
 	}
 	w.Header().Add("Authorization", "Bearer "+token)
 	r.Header.Add("Authorization", "Bearer "+token)
