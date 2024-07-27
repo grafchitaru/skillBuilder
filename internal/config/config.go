@@ -12,6 +12,7 @@ type Config struct {
 	HTTPServerAddress   string `env:"SERVER_ADDRESS" envDefault:"127.0.0.1:8080"`
 	PostgresDatabaseDsn string `env:"DATABASE_DSN" envDefault:"postgres://root:root@localhost:54322/app"`
 	SecretKey           string `env:"SECRET_KEY" envDefault:"your_secret_key"`
+	ClientServer        string `env:"CLIENT_SERVER" envDefault:"http://127.0.0.1:8081"`
 }
 
 type Configs interface {
@@ -33,6 +34,7 @@ func NewConfig() *Config {
 
 	flag.StringVar(&cfg.HTTPServerAddress, "a", cfg.HTTPServerAddress, "HTTP server address")
 	flag.StringVar(&cfg.PostgresDatabaseDsn, "d", cfg.PostgresDatabaseDsn, "PostgreSql database dsn")
+	flag.StringVar(&cfg.ClientServer, "c", cfg.ClientServer, "Client Server address")
 
 	flag.Parse()
 
