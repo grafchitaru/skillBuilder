@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 	"github.com/grafchitaru/skillBuilder/internal/users"
 	"io"
 	"net/http"
@@ -14,11 +15,6 @@ import (
 type Reg struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
-}
-
-type Result struct {
-	Id    string `json:"id"`
-	Token string `json:"token"`
 }
 
 func (ctx *Handlers) Register(res http.ResponseWriter, req *http.Request) {
@@ -76,7 +72,7 @@ func (ctx *Handlers) Register(res http.ResponseWriter, req *http.Request) {
 	token, _ := auth.GenerateToken(userID, ctx.Config.SecretKey)
 	auth.SetCookieAuthorization(res, req, token)
 
-	result := Result{
+	result := models.ResultUser{
 		Id:    newUser,
 		Token: token,
 	}

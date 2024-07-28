@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 	"github.com/grafchitaru/skillBuilder/internal/users"
 	"net/http"
 	"net/http/httptest"
@@ -85,7 +86,7 @@ func TestLogin(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, r.Code)
 
 			if tt.expectedStatus == http.StatusOK {
-				var result Result
+				var result models.ResultUser
 				json.NewDecoder(r.Body).Decode(&result)
 				assert.Equal(t, testUserID, result.Id)
 			}

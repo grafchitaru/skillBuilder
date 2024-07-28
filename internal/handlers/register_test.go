@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -59,7 +60,7 @@ func TestRegister(t *testing.T) {
 			assert.Equal(t, tt.expectedStatus, r.Code)
 
 			if tt.expectedStatus == http.StatusOK {
-				var result Result
+				var result models.ResultUser
 				json.NewDecoder(r.Body).Decode(&result)
 				assert.Equal(t, testUserID, result.Id)
 			}

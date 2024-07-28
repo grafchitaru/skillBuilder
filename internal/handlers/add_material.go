@@ -65,7 +65,7 @@ func (ctx *Handlers) AddMaterial(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	result := Result{
+	result := models.ResultId{
 		Id: id,
 	}
 	data, err := json.Marshal(result)
