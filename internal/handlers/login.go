@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 	"github.com/grafchitaru/skillBuilder/internal/users"
 	"io"
 	"net/http"
@@ -67,7 +68,7 @@ func (ctx *Handlers) Login(res http.ResponseWriter, req *http.Request) {
 	token, _ := auth.GenerateToken(userIDuuid, ctx.Config.SecretKey)
 	auth.SetCookieAuthorization(res, req, token)
 
-	result := Result{
+	result := models.ResultUser{
 		Id:    userID,
 		Token: token,
 	}
