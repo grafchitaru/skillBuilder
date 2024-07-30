@@ -96,18 +96,27 @@ func (s *Storage) GetUserCollections(userID string) ([]models.Collection, error)
 	defer cancel()
 
 	//TODO Need optimize SQL Request + add indexes
-	rows, err := s.pool.Query(ctx, "SELECT collections.*, "+
-		"(SELECT sum(materials.xp) "+
-		"FROM materials WHERE materials.id IN (SELECT collection_materials.material_id FROM collection_materials WHERE collection_materials.collection_id = collections.id) "+
-		") AS sum_xp, "+
-		"( "+
-		"SELECT (SELECT sum(materials.xp) FROM materials WHERE materials.id = user_materials.material_id) "+
-		"FROM user_materials WHERE user_materials.material_id IN (SELECT collection_materials.material_id FROM collection_materials WHERE collection_materials.collection_id = collections.id) "+
-		"AND user_materials.completed = true  AND user_materials.user_id = $1 "+
-		") AS xp "+
-		"FROM collections "+
-		"INNER JOIN user_collections ON user_collections.collection_id = collections.id "+
-		"AND user_collections.user_id = $1", userID)
+	rows, err := s.pool.Query(ctx, `SELECT collections.*,
+       COALESCE(sum_xp.total_xp, 0) AS sum_xp,
+       COALESCE(user_xp.total_xp, 0) AS xp
+FROM collections
+INNER JOIN user_collections ON user_collections.collection_id = collections.id
+LEFT JOIN (
+    SELECT collection_id, SUM(materials.xp) AS total_xp
+    FROM collection_materials
+    INNER JOIN materials ON collection_materials.material_id = materials.id
+    GROUP BY collection_id
+) AS sum_xp ON sum_xp.collection_id = collections.id
+LEFT JOIN (
+    SELECT collection_materials.collection_id, SUM(materials.xp) AS total_xp
+    FROM collection_materials
+    INNER JOIN materials ON collection_materials.material_id = materials.id
+    INNER JOIN user_materials ON materials.id = user_materials.material_id
+    WHERE user_materials.completed = true
+      AND user_materials.user_id = $1
+    GROUP BY collection_materials.collection_id
+) AS user_xp ON user_xp.collection_id = collections.id
+WHERE user_collections.user_id = $1`, userID)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return nil, fmt.Errorf("%s: operation timed out: %w", op, err)
@@ -141,17 +150,27 @@ func (s *Storage) GetCollection(id string, userID string) (models.Collection, er
 	var collection models.Collection
 
 	//TODO Need optimize SQL Request + add indexes
-	err := s.pool.QueryRow(ctx, "SELECT collections.*, "+
-		"( "+
-		"SELECT sum(materials.xp) "+
-		"FROM materials WHERE materials.id IN (SELECT collection_materials.material_id FROM collection_materials WHERE collection_materials.collection_id = collections.id) "+
-		") AS sum_xp, "+
-		"( "+
-		"SELECT (SELECT sum(materials.xp) FROM materials WHERE materials.id = user_materials.material_id) "+
-		"FROM user_materials WHERE user_materials.material_id IN (SELECT collection_materials.material_id FROM collection_materials WHERE collection_materials.collection_id = collections.id) "+
-		"AND user_materials.completed = true AND user_materials.user_id = $1 "+
-		") AS xp "+
-		"FROM collections WHERE id = $2", userID, id).Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description, &collection.SumXp, &collection.Xp)
+	err := s.pool.QueryRow(ctx, `SELECT collections.*,
+       COALESCE(sum_xp.total_xp, 0) AS sum_xp,
+       COALESCE(user_xp.total_xp, 0) AS xp
+FROM collections
+LEFT JOIN (
+    SELECT collection_id, SUM(materials.xp) AS total_xp
+    FROM collection_materials
+    INNER JOIN materials ON collection_materials.material_id = materials.id
+    GROUP BY collection_id
+) AS sum_xp ON sum_xp.collection_id = collections.id
+LEFT JOIN (
+    SELECT collection_materials.collection_id, SUM(materials.xp) AS total_xp
+    FROM collection_materials
+    INNER JOIN materials ON collection_materials.material_id = materials.id
+    INNER JOIN user_materials ON materials.id = user_materials.material_id
+    WHERE user_materials.completed = true
+      AND user_materials.user_id = $1
+    GROUP BY collection_materials.collection_id
+) AS user_xp ON user_xp.collection_id = collections.id
+WHERE collections.id = $2
+`, userID, id).Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description, &collection.SumXp, &collection.Xp)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return models.Collection{}, fmt.Errorf("%s: operation timed out: %w", op, err)

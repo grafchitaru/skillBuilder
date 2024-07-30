@@ -66,16 +66,20 @@ func (s *Storage) DeleteMaterial(userID, materialID string) error {
 	return nil
 }
 
-func (s *Storage) GetMaterials(collectionID string) ([]models.Material, error) {
+func (s *Storage) GetMaterials(collectionID, userID string) ([]models.Material, error) {
 	const op = "storage.postgresql.GetMaterials"
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	rows, err := s.pool.Query(ctx, "SELECT materials.* "+
-		"FROM materials "+
-		"INNER JOIN collection_materials ON materials.id = collection_materials.material_id "+
-		"WHERE collection_materials.collection_id = $1 ", collectionID)
+	rows, err := s.pool.Query(ctx, `
+		SELECT materials.*,
+		       COALESCE(user_materials.completed, false) AS completed
+		FROM materials
+		INNER JOIN collection_materials ON materials.id = collection_materials.material_id
+		LEFT JOIN user_materials ON materials.id = user_materials.material_id AND user_materials.user_id = $2
+		WHERE collection_materials.collection_id = $1
+	`, collectionID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -84,9 +88,11 @@ func (s *Storage) GetMaterials(collectionID string) ([]models.Material, error) {
 	var materials []models.Material
 	for rows.Next() {
 		var material models.Material
-		if err := rows.Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.TypeId, &material.Xp, &material.Link); err != nil {
+		var completed bool
+		if err := rows.Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.TypeId, &material.Xp, &material.Link, &completed); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
+		material.Completed = completed
 		materials = append(materials, material)
 	}
 

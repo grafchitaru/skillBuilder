@@ -25,7 +25,7 @@ type Repositories interface {
 	UpdateMaterial(material models.Material) error
 	DeleteMaterial(userID, materialID string) error
 	GetMaterial(materialID string) (models.Material, error)
-	GetMaterials(collectionID string) ([]models.Material, error)
+	GetMaterials(collectionID string, userID string) ([]models.Material, error)
 	MarkMaterialAsCompleted(userID, materialID string) error
 	MarkMaterialAsNotCompleted(userID, materialID string) error
 	SearchMaterials(query string) ([]models.Material, error)

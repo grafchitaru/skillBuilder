@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
+	"github.com/grafchitaru/skillBuilder/internal/models"
 	"net/http"
 )
 
@@ -25,6 +27,13 @@ func (ctx *Handlers) MarkMaterialAsIncomplete(res http.ResponseWriter, req *http
 		return
 	}
 
+	result := models.ResultId{}
+	data, err := json.Marshal(result)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	res.Header().Set("Content-Type", "application/json")
 	res.WriteHeader(http.StatusOK)
+	res.Write(data)
 }

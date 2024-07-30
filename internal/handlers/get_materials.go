@@ -14,13 +14,13 @@ func (ctx *Handlers) GetMaterials(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	_, err := auth.GetUserID(req, ctx.Config.SecretKey)
+	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	result, err := ctx.Repos.GetMaterials(collectionID)
+	result, err := ctx.Repos.GetMaterials(collectionID, userID)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusNotFound)
 		return
