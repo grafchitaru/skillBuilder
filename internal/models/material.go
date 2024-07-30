@@ -21,4 +21,5 @@ type Material struct {
 	TypeId      string    `json:"type_id"`
 	Xp          int       `json:"xp"`
 	Link        string    `json:"link"`
+	Completed   bool      `json:"completed"`
 }

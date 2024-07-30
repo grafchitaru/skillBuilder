@@ -188,7 +188,7 @@ func (ms *MockStorage) GetMaterial(materialID string) (models.Material, error) {
 	return models.Material{}, errors.New("not implemented")
 }
 
-func (ms *MockStorage) GetMaterials(collectionID string) ([]models.Material, error) {
+func (ms *MockStorage) GetMaterials(collectionID string, userID string) ([]models.Material, error) {
 	if ms.GetMaterialsFunc != nil {
 		return ms.GetMaterialsFunc(collectionID)
 	}
