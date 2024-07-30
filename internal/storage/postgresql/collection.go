@@ -56,18 +56,29 @@ func (s *Storage) GetCollections(userID string) ([]models.Collection, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	//TODO Need optimize SQL Request + add indexes
-	rows, err := s.pool.Query(ctx, "SELECT collections.*,"+
-		"(SELECT sum(materials.xp) "+
-		"FROM materials WHERE materials.id IN "+
-		"(SELECT collection_materials.material_id FROM collection_materials WHERE collection_materials.collection_id = collections.id) "+
-		") AS sum_xp, "+
-		"( "+
-		"SELECT (SELECT sum(materials.xp) FROM materials WHERE materials.id = user_materials.material_id) "+
-		"FROM user_materials WHERE user_materials.material_id IN (SELECT collection_materials.material_id FROM collection_materials WHERE collection_materials.collection_id = collections.id) "+
-		"AND user_materials.completed = true AND user_materials.user_id = $1 "+
-		") AS xp "+
-		"FROM collections", userID)
+	query := `
+	SELECT
+		collections.*,
+		COALESCE(
+			(SELECT SUM(materials.xp)
+			 FROM materials
+			 JOIN collection_materials ON materials.id = collection_materials.material_id
+			 WHERE collection_materials.collection_id = collections.id), 0
+		) AS sum_xp,
+		COALESCE(
+			(SELECT SUM(materials.xp)
+			 FROM materials
+			 JOIN collection_materials ON materials.id = collection_materials.material_id
+			 JOIN user_materials ON materials.id = user_materials.material_id
+			 WHERE collection_materials.collection_id = collections.id
+			   AND user_materials.completed = true
+			   AND user_materials.user_id = $1), 0
+		) AS xp
+	FROM
+		collections;
+	`
+
+	rows, err := s.pool.Query(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -144,12 +155,23 @@ WHERE user_collections.user_id = $1`, userID)
 func (s *Storage) GetCollection(id string, userID string) (models.Collection, error) {
 	const op = "storage.postgresql.GetCollection"
 
+	// Validate input parameters
+	if _, err := uuid.Parse(id); err != nil {
+		return models.Collection{}, fmt.Errorf("%s: invalid collection ID: %w", op, err)
+	}
+	if _, err := uuid.Parse(userID); err != nil {
+		return models.Collection{}, fmt.Errorf("%s: invalid user ID: %w", op, err)
+	}
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
 	var collection models.Collection
 
-	//TODO Need optimize SQL Request + add indexes
+	// Log the input parameters for debugging
+	fmt.Printf("GetCollection: id=%s, userID=%s\n", id, userID)
+
+	// TODO Need optimize SQL Request + add indexes
 	err := s.pool.QueryRow(ctx, `SELECT collections.*,
        COALESCE(sum_xp.total_xp, 0) AS sum_xp,
        COALESCE(user_xp.total_xp, 0) AS xp
