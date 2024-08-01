@@ -10,6 +10,12 @@ import (
 )
 
 func (ctx *Handlers) CreateCollection(res http.ResponseWriter, req *http.Request) {
+	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	var reader io.Reader
 
 	if req.Header.Get(`Content-Encoding`) == `gzip` {
@@ -34,12 +40,6 @@ func (ctx *Handlers) CreateCollection(res http.ResponseWriter, req *http.Request
 
 	if err := json.Unmarshal(body, &collection); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 

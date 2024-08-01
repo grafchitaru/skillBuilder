@@ -11,6 +11,12 @@ import (
 )
 
 func (ctx *Handlers) UpdateMaterial(res http.ResponseWriter, req *http.Request) {
+	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
 	materialID := chi.URLParam(req, "id")
 	if materialID == "" {
 		http.Error(res, "ID not found", http.StatusNotFound)
@@ -41,12 +47,6 @@ func (ctx *Handlers) UpdateMaterial(res http.ResponseWriter, req *http.Request) 
 
 	if err := json.Unmarshal(body, &material); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
