@@ -22,7 +22,7 @@ func (s *Storage) CreateCollection(userID, name, description string) (string, er
 	_, err := s.pool.Exec(ctx, `
         INSERT INTO collections(id, user_id, name, description, created_at, updated_at)
         VALUES($1, $2, $3, $4, $5, $6);
-    `, id, userID, name, description, now.Format("2006-01-02 15:04:05"), now.Format("2006-01-02 15:04:05"))
+    `, id, userID, name, description, now.Format("2006-01-02 15:04:05"), now)
 	if err != nil {
 		return "", fmt.Errorf("%s exec: %w", op, err)
 	}
