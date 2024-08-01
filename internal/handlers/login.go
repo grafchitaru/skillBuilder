@@ -1,10 +1,10 @@
 package handlers
 
 import (
-	"compress/gzip"
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
+	"github.com/grafchitaru/skillBuilder/internal/middlewares/compress"
 	"github.com/grafchitaru/skillBuilder/internal/models"
 	"github.com/grafchitaru/skillBuilder/internal/users"
 	"io"
@@ -12,18 +12,10 @@ import (
 )
 
 func (ctx *Handlers) Login(res http.ResponseWriter, req *http.Request) {
-	var reader io.Reader
-
-	if req.Header.Get(`Content-Encoding`) == `gzip` {
-		gz, err := gzip.NewReader(req.Body)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		reader = gz
-		defer gz.Close()
-	} else {
-		reader = req.Body
+	reader, err := compress.Unzip(res, req)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	body, ioError := io.ReadAll(reader)

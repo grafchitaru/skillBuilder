@@ -1,11 +1,11 @@
 package handlers
 
 import (
-	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
+	"github.com/grafchitaru/skillBuilder/internal/middlewares/compress"
 	"github.com/grafchitaru/skillBuilder/internal/models"
 	"github.com/grafchitaru/skillBuilder/internal/users"
 	"io"
@@ -18,18 +18,10 @@ type Reg struct {
 }
 
 func (ctx *Handlers) Register(res http.ResponseWriter, req *http.Request) {
-	var reader io.Reader
-
-	if req.Header.Get(`Content-Encoding`) == `gzip` {
-		gz, err := gzip.NewReader(req.Body)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		reader = gz
-		defer gz.Close()
-	} else {
-		reader = req.Body
+	reader, err := compress.Unzip(res, req)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	body, ioError := io.ReadAll(reader)
@@ -49,7 +41,7 @@ func (ctx *Handlers) Register(res http.ResponseWriter, req *http.Request) {
 
 	res.Header().Set("Content-Type", "application/json")
 
-	_, err := ctx.Repos.GetUser(login)
+	_, err = ctx.Repos.GetUser(login)
 	if err == nil {
 		http.Error(res, "Conflict", http.StatusConflict)
 		return
