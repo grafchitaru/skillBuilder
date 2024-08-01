@@ -19,7 +19,7 @@ func (ctx *Handlers) UpdateMaterial(res http.ResponseWriter, req *http.Request) 
 
 	materialID := chi.URLParam(req, "id")
 	if materialID == "" {
-		http.Error(res, "ID not found", http.StatusNotFound)
+		http.Error(res, http.StatusText(404), http.StatusNotFound)
 		return
 	}
 

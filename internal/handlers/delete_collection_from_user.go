@@ -17,7 +17,7 @@ func (ctx *Handlers) DeleteCollectionFromUser(res http.ResponseWriter, req *http
 
 	collectionID := chi.URLParam(req, "id")
 	if collectionID == "" {
-		http.Error(res, "ID not found", http.StatusNotFound)
+		http.Error(res, http.StatusText(404), http.StatusNotFound)
 		return
 	}
 

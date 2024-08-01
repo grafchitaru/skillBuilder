@@ -17,7 +17,7 @@ func (ctx *Handlers) MarkMaterialAsCompleted(res http.ResponseWriter, req *http.
 
 	materialID := chi.URLParam(req, "id")
 	if materialID == "" {
-		http.Error(res, "ID not found", http.StatusNotFound)
+		http.Error(res, http.StatusText(404), http.StatusNotFound)
 		return
 	}
 

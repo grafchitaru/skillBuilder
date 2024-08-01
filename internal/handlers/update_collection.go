@@ -19,7 +19,7 @@ func (ctx *Handlers) UpdateCollection(res http.ResponseWriter, req *http.Request
 
 	collectionID := chi.URLParam(req, "id")
 	if collectionID == "" {
-		http.Error(res, "ID not found", http.StatusNotFound)
+		http.Error(res, http.StatusText(404), http.StatusNotFound)
 		return
 	}
 
