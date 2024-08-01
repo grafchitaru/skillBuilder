@@ -58,7 +58,7 @@ func (s *Storage) GetCollections(userID string) ([]models.Collection, error) {
 
 	query := `
 	SELECT
-		collections.*,
+		collections.id, collections.user_id, collections.name, collections.description, collections.created_at, collections.updated_at,
 		COALESCE(
 			(SELECT SUM(materials.xp)
 			 FROM materials
@@ -87,7 +87,7 @@ func (s *Storage) GetCollections(userID string) ([]models.Collection, error) {
 	var collections []models.Collection
 	for rows.Next() {
 		var collection models.Collection
-		if err = rows.Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description, &collection.SumXp, &collection.Xp); err != nil {
+		if err = rows.Scan(&collection.Id, &collection.UserId, &collection.Name, &collection.Description, &collection.CreatedAt, &collection.UpdatedAt, &collection.SumXp, &collection.Xp); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		collections = append(collections, collection)
@@ -107,7 +107,7 @@ func (s *Storage) GetUserCollections(userID string) ([]models.Collection, error)
 	defer cancel()
 
 	//TODO Need optimize SQL Request + add indexes
-	rows, err := s.pool.Query(ctx, `SELECT collections.*,
+	rows, err := s.pool.Query(ctx, `SELECT collections.id, collections.user_id, collections.name, collections.description, collections.created_at, collections.updated_at,
        COALESCE(sum_xp.total_xp, 0) AS sum_xp,
        COALESCE(user_xp.total_xp, 0) AS xp
 FROM collections
@@ -139,7 +139,7 @@ WHERE user_collections.user_id = $1`, userID)
 	var collections []models.Collection
 	for rows.Next() {
 		var collection models.Collection
-		if err = rows.Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description, &collection.SumXp, &collection.Xp); err != nil {
+		if err = rows.Scan(&collection.Id, &collection.UserId, &collection.Name, &collection.Description, &collection.CreatedAt, &collection.UpdatedAt, &collection.SumXp, &collection.Xp); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		collections = append(collections, collection)
@@ -172,7 +172,7 @@ func (s *Storage) GetCollection(id string, userID string) (models.Collection, er
 	fmt.Printf("GetCollection: id=%s, userID=%s\n", id, userID)
 
 	// TODO Need optimize SQL Request + add indexes
-	err := s.pool.QueryRow(ctx, `SELECT collections.*,
+	err := s.pool.QueryRow(ctx, `SELECT collections.id, collections.user_id, collections.name, collections.description, collections.created_at, collections.updated_at,
        COALESCE(sum_xp.total_xp, 0) AS sum_xp,
        COALESCE(user_xp.total_xp, 0) AS xp
 FROM collections
@@ -192,7 +192,7 @@ LEFT JOIN (
     GROUP BY collection_materials.collection_id
 ) AS user_xp ON user_xp.collection_id = collections.id
 WHERE collections.id = $2
-`, userID, id).Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description, &collection.SumXp, &collection.Xp)
+`, userID, id).Scan(&collection.Id, &collection.UserId, &collection.Name, &collection.Description, &collection.CreatedAt, &collection.UpdatedAt, &collection.SumXp, &collection.Xp)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return models.Collection{}, fmt.Errorf("%s: operation timed out: %w", op, err)
@@ -262,7 +262,7 @@ func (s *Storage) SearchCollections(query string, userID string) ([]models.Colle
 	defer cancel()
 
 	//TODO Need optimize SQL Request + add indexes
-	rows, err := s.pool.Query(ctx, "SELECT collections.*, "+
+	rows, err := s.pool.Query(ctx, "SELECT collections.id, collections.user_id, collections.name, collections.description, collections.created_at, collections.updated_at, "+
 		"( "+
 		"SELECT sum(materials.xp) "+
 		"FROM materials WHERE materials.id IN (SELECT collection_materials.material_id FROM collection_materials WHERE collection_materials.collection_id = collections.id) "+
@@ -285,7 +285,7 @@ func (s *Storage) SearchCollections(query string, userID string) ([]models.Colle
 	var collections []models.Collection
 	for rows.Next() {
 		var collection models.Collection
-		if err = rows.Scan(&collection.Id, &collection.CreatedAt, &collection.UpdatedAt, &collection.UserId, &collection.Name, &collection.Description, &collection.SumXp, &collection.Xp); err != nil {
+		if err = rows.Scan(&collection.Id, &collection.UserId, &collection.Name, &collection.Description, &collection.CreatedAt, &collection.UpdatedAt, &collection.SumXp, &collection.Xp); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 		collections = append(collections, collection)

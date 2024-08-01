@@ -73,7 +73,7 @@ func (s *Storage) GetMaterials(collectionID, userID string) ([]models.Material, 
 	defer cancel()
 
 	rows, err := s.pool.Query(ctx, `
-		SELECT materials.*,
+		SELECT materials.id, materials.created_at, materials.updated_at, materials.user_id, materials.name, materials.description, materials.type_id, materials.xp, materials.link,
 		       COALESCE(user_materials.completed, false) AS completed
 		FROM materials
 		INNER JOIN collection_materials ON materials.id = collection_materials.material_id
@@ -111,7 +111,7 @@ func (s *Storage) GetMaterial(materialID string) (models.Material, error) {
 
 	var material models.Material
 
-	err := s.pool.QueryRow(ctx, "SELECT * FROM materials WHERE id = $1", materialID).Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.TypeId, &material.Xp, &material.Link)
+	err := s.pool.QueryRow(ctx, "SELECT id, created_at, updated_at, user_id, name, description, type_id, xp, link FROM materials WHERE id = $1", materialID).Scan(&material.Id, &material.CreatedAt, &material.UpdatedAt, &material.UserId, &material.Name, &material.Description, &material.TypeId, &material.Xp, &material.Link)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return models.Material{}, fmt.Errorf("%s: operation timed out: %w", op, err)
@@ -154,7 +154,7 @@ func (s *Storage) MarkMaterialAsCompleted(userID, materialID string) error {
 	)
 	INSERT INTO user_materials (user_id, material_id, completed)
 	SELECT $1, $2, true
-	WHERE NOT EXISTS (SELECT * FROM upsert);
+	WHERE NOT EXISTS (SELECT user_id, material_id, completed FROM upsert);
     `, userID, materialID)
 	if err != nil {
 		return fmt.Errorf("%s exec: %w", op, err)
@@ -178,7 +178,7 @@ WITH upsert AS (
 )
 INSERT INTO user_materials (user_id, material_id, completed)
 SELECT $1, $2, false
-WHERE NOT EXISTS (SELECT * FROM upsert);
+WHERE NOT EXISTS (SELECT user_id, material_id, completed FROM upsert);
     `, userID, materialID)
 	if err != nil {
 		return fmt.Errorf("%s exec: %w", op, err)
@@ -193,7 +193,7 @@ func (s *Storage) SearchMaterials(query string) ([]models.Material, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	rows, err := s.pool.Query(ctx, "SELECT * FROM materials WHERE name LIKE '%'||$1||'%' OR description LIKE '%'||$1||'%'", query)
+	rows, err := s.pool.Query(ctx, "SELECT id, created_at, updated_at, user_id, name, description, type_id, xp, link FROM materials WHERE name LIKE '%'||$1||'%' OR description LIKE '%'||$1||'%'", query)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
