@@ -33,31 +33,34 @@ func New(ctx handlers.Handlers) {
 
 	r.Post("/ping", hc.Ping)
 
-	r.Post("/api/user/register", hc.Register)
-	r.Post("/api/user/login", hc.Login)
+	apiRouter := chi.NewRouter()
+	apiRouter.Post("/user/register", hc.Register)
+	apiRouter.Post("/user/login", hc.Login)
 
-	r.Post("/api/collection", hc.CreateCollection)
-	r.Put("/api/collection/{id}", hc.UpdateCollection)
-	r.Delete("/api/collection/{id}", hc.DeleteCollection)
-	r.Get("/api/collection/{id}", hc.GetCollection)
-	r.Get("/api/collections", hc.GetCollections)
-	r.Get("/api/collections/user", hc.GetUserCollections)
+	apiRouter.Post("/collection", hc.CreateCollection)
+	apiRouter.Put("/collection/{id}", hc.UpdateCollection)
+	apiRouter.Delete("/collection/{id}", hc.DeleteCollection)
+	apiRouter.Get("/collection/{id}", hc.GetCollection)
+	apiRouter.Get("/collections", hc.GetCollections)
+	apiRouter.Get("/collections/user", hc.GetUserCollections)
 
-	r.Post("/api/collection/{id}/user", hc.AddCollectionToUser)
-	r.Delete("/api/collection/{id}/user", hc.DeleteCollectionFromUser)
+	apiRouter.Post("/collection/{id}/user", hc.AddCollectionToUser)
+	apiRouter.Delete("/collection/{id}/user", hc.DeleteCollectionFromUser)
 
-	r.Post("/api/material", hc.AddMaterial)
-	r.Put("/api/material/{id}", hc.UpdateMaterial)
-	r.Delete("/api/material/{id}", hc.DeleteMaterial)
-	r.Get("/api/material/{id}", hc.GetMaterial)
-	r.Get("/api/collection/{id}/materials", hc.GetMaterials)
+	apiRouter.Post("/material", hc.AddMaterial)
+	apiRouter.Put("/material/{id}", hc.UpdateMaterial)
+	apiRouter.Delete("/material/{id}", hc.DeleteMaterial)
+	apiRouter.Get("/material/{id}", hc.GetMaterial)
+	apiRouter.Get("/collection/{id}/materials", hc.GetMaterials)
 
-	r.Post("/api/material/{id}/completed", hc.MarkMaterialAsCompleted)
-	r.Post("/api/material/{id}/incomplete", hc.MarkMaterialAsIncomplete)
+	apiRouter.Post("/material/{id}/completed", hc.MarkMaterialAsCompleted)
+	apiRouter.Post("/material/{id}/incomplete", hc.MarkMaterialAsIncomplete)
 
-	r.Post("/api/search", hc.SearchCollectionMaterial)
+	apiRouter.Post("/search", hc.SearchCollectionMaterial)
 
-	r.Get("/api/material/type", hc.GetTypeMaterials)
+	apiRouter.Get("/material/type", hc.GetTypeMaterials)
+
+	r.Mount("/api", apiRouter)
 
 	err := http.ListenAndServe(ctx.Config.HTTPServerAddress, r)
 	if err != nil {

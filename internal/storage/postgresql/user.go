@@ -60,7 +60,7 @@ func (s *Storage) Registration(id string, login string, password string) (string
 	_, err = tx.Exec(ctx, `
         INSERT INTO users(id, login, password, created_at, updated_at)   
         VALUES($1, $2, $3, $4, $5);
-    `, id, login, password, now.Format("2006-01-02 15:04:05"), now.Format("2006-01-02 15:04:05"))
+    `, id, login, password, now.Format("2006-01-02 15:04:05"), now)
 	if err != nil {
 		return "", fmt.Errorf("%s exec: %w", op, err)
 	}

@@ -13,7 +13,7 @@ func (s *Storage) GetTypeMaterials() ([]models.TypeMaterial, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	rows, err := s.pool.Query(ctx, "SELECT * FROM type_materials")
+	rows, err := s.pool.Query(ctx, "SELECT id, created_at, updated_at, name, characteristic, xp FROM type_materials")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}

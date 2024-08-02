@@ -1,27 +1,25 @@
 package handlers
 
 import (
-	"compress/gzip"
 	"encoding/json"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
+	"github.com/grafchitaru/skillBuilder/internal/middlewares/compress"
 	"github.com/grafchitaru/skillBuilder/internal/models"
 	"io"
 	"net/http"
 )
 
 func (ctx *Handlers) AddMaterial(res http.ResponseWriter, req *http.Request) {
-	var reader io.Reader
+	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusUnauthorized)
+		return
+	}
 
-	if req.Header.Get(`Content-Encoding`) == `gzip` {
-		gz, err := gzip.NewReader(req.Body)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		reader = gz
-		defer gz.Close()
-	} else {
-		reader = req.Body
+	reader, err := compress.Unzip(res, req)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	body, ioError := io.ReadAll(reader)
@@ -34,12 +32,6 @@ func (ctx *Handlers) AddMaterial(res http.ResponseWriter, req *http.Request) {
 
 	if err := json.Unmarshal(body, &material); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 

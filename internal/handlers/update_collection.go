@@ -1,34 +1,32 @@
 package handlers
 
 import (
-	"compress/gzip"
 	"encoding/json"
 	"github.com/go-chi/chi/v5"
 	"github.com/grafchitaru/skillBuilder/internal/middlewares/auth"
+	"github.com/grafchitaru/skillBuilder/internal/middlewares/compress"
 	"github.com/grafchitaru/skillBuilder/internal/models"
 	"io"
 	"net/http"
 )
 
 func (ctx *Handlers) UpdateCollection(res http.ResponseWriter, req *http.Request) {
-	collectionID := chi.URLParam(req, "id")
-	if collectionID == "" {
-		http.Error(res, "ID not found", http.StatusNotFound)
+	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 
-	var reader io.Reader
+	collectionID := chi.URLParam(req, "id")
+	if collectionID == "" {
+		http.Error(res, http.StatusText(404), http.StatusNotFound)
+		return
+	}
 
-	if req.Header.Get(`Content-Encoding`) == `gzip` {
-		gz, err := gzip.NewReader(req.Body)
-		if err != nil {
-			http.Error(res, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		reader = gz
-		defer gz.Close()
-	} else {
-		reader = req.Body
+	reader, err := compress.Unzip(res, req)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	body, ioError := io.ReadAll(reader)
@@ -41,12 +39,6 @@ func (ctx *Handlers) UpdateCollection(res http.ResponseWriter, req *http.Request
 
 	if err := json.Unmarshal(body, &collection); err != nil {
 		http.Error(res, err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
-	if err != nil {
-		http.Error(res, err.Error(), http.StatusUnauthorized)
 		return
 	}
 

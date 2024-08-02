@@ -8,15 +8,15 @@ import (
 )
 
 func (ctx *Handlers) GetMaterials(res http.ResponseWriter, req *http.Request) {
-	collectionID := chi.URLParam(req, "id")
-	if collectionID == "" {
-		http.Error(res, "ID not found", http.StatusNotFound)
-		return
-	}
-
 	userID, err := auth.GetUserID(req, ctx.Config.SecretKey)
 	if err != nil {
 		http.Error(res, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	collectionID := chi.URLParam(req, "id")
+	if collectionID == "" {
+		http.Error(res, http.StatusText(404), http.StatusNotFound)
 		return
 	}
 
